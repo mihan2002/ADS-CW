@@ -1,166 +1,267 @@
-import type { Request, Response } from 'express';
-import { User } from '../models/User.js';
+import type { Request, Response } from "express";
+import { eq } from "drizzle-orm";
+import { db } from "../db/index.js";
+import { usersTable } from "../db/schema.js";
+import bcrypt from "bcrypt";
 
 export class UserController {
-  // Get all users
-  static getAll(req: Request, res: Response): void {
-    try {
-      const users = User.getAll();
-      res.status(200).json({
-        success: true,
-        data: users,
-        message: 'Users retrieved successfully',
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: 'Error retrieving users',
-      });
-    }
-  }
+	static async getAll(req: Request, res: Response): Promise<void> {
+		try {
+			const users = await db.select().from(usersTable);
 
-  // Get user by ID
-  static getById(req: Request, res: Response): void {
-    try {
-      const { id } = req.params;
+			res.status(200).json({
+				success: true,
+				data: users,
+				message: "Users retrieved successfully",
+			});
+		} catch (error) {
+			console.error("Error fetching users:", error);
+			res.status(500).json({
+				success: false,
+				message: "Failed to retrieve users",
+			});
+		}
+	}
+
+	static async getById(req: Request, res: Response): Promise<void> {
+		try {
+			const id = Number(req.params.id);
+
+			if (!Number.isInteger(id) || id <= 0) {
+				res.status(400).json({
+					success: false,
+					message: "Valid user ID is required",
+				});
+				return;
+			}
+
+			const user = await db
+				.select()
+				.from(usersTable)
+				.where(eq(usersTable.id, id))
+				.limit(1);
+
+			if (user.length === 0) {
+				res.status(404).json({
+					success: false,
+					message: "User not found",
+				});
+				return;
+			}
+
+			res.status(200).json({
+				success: true,
+				data: user[0],
+				message: "User retrieved successfully",
+			});
+		} catch (error) {
+			console.error("Error fetching user:", error);
+			res.status(500).json({
+				success: false,
+				message: "Failed to retrieve user",
+			});
+		}
+	}
+
+	static async create(req: Request, res: Response): Promise<void> {
+		try {
       
-      if (!id) {
-        res.status(400).json({
-          success: false,
-          message: 'User ID is required',
-        });
-        return;
-      }
+			const { name, age, email, password } = req.body;
+			console.log("🚀 ~ UserController ~ create ~ req.body:", req.body)
 
-      const user = User.getById(parseInt(id));
+			if (!name || !email || !password || age === undefined) {
+				res.status(400).json({
+					success: false,
+					message: "name, age, email and password are required",
+				});
+				return;
+			}
 
-      if (!user) {
-        res.status(404).json({
-          success: false,
-          message: 'User not found',
-        });
-        return;
-      }
+			const parsedAge = Number(age);
+			if (!Number.isInteger(parsedAge) || parsedAge <= 0) {
+				res.status(400).json({
+					success: false,
+					message: "age must be a positive integer",
+				});
+				return;
+			}
 
-      res.status(200).json({
-        success: true,
-        data: user,
-        message: 'User retrieved successfully',
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: 'Error retrieving user',
-      });
-    }
-  }
+			const now = new Date();
 
-  // Create new user
-  static create(req: Request, res: Response): void {
-    try {
-      const { name, email } = req.body;
+			const created = await db
+				.insert(usersTable)
+				.values({
+					name,
+					age: parsedAge,
+					email,
+					password_hash: await bcrypt.hash(password, 10),
+					is_email_verified: 0,
+					created_at: now,
+					updated_at: now,
+					last_login_at: null,
+				})
+				.$returningId();
 
-      if (!name || !email) {
-        res.status(400).json({
-          success: false,
-          message: 'Name and email are required',
-        });
-        return;
-      }
+			const newUserId = created[0]?.id;
 
-      const user = User.create(name, email);
+			if (newUserId === undefined) {
+				res.status(500).json({
+					success: false,
+					message: "Failed to create user",
+				});
+				return;
+			}
 
-      res.status(201).json({
-        success: true,
-        data: user,
-        message: 'User created successfully',
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: 'Error creating user',
-      });
-    }
-  }
+			const user = await db
+				.select()
+				.from(usersTable)
+				.where(eq(usersTable.id, newUserId))
+				.limit(1);
 
-  // Update user
-  static update(req: Request, res: Response): void {
-    try {
-      const { id } = req.params;
-      const { name, email } = req.body;
+			res.status(201).json({
+				success: true,
+				data: user[0],
+				message: "User created successfully",
+			});
+		} catch (error) {
+			console.error("Error creating user:", error);
+			res.status(500).json({
+				success: false,
+				message: "Failed to create user",
+			});
+		}
+	}
 
-      if (!id) {
-        res.status(400).json({
-          success: false,
-          message: 'User ID is required',
-        });
-        return;
-      }
+	static async update(req: Request, res: Response): Promise<void> {
+		try {
+			const id = Number(req.params.id);
 
-      if (!name || !email) {
-        res.status(400).json({
-          success: false,
-          message: 'Name and email are required',
-        });
-        return;
-      }
+			if (!Number.isInteger(id) || id <= 0) {
+				res.status(400).json({
+					success: false,
+					message: "Valid user ID is required",
+				});
+				return;
+			}
 
-      const user = User.update(parseInt(id), name, email);
+			const { name, age, email, is_email_verified, last_login_at } =
+				req.body;
 
-      if (!user) {
-        res.status(404).json({
-          success: false,
-          message: 'User not found',
-        });
-        return;
-      }
+			const existingUser = await db
+				.select()
+				.from(usersTable)
+				.where(eq(usersTable.id, id))
+				.limit(1);
 
-      res.status(200).json({
-        success: true,
-        data: user,
-        message: 'User updated successfully',
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: 'Error updating user',
-      });
-    }
-  }
+			if (existingUser.length === 0) {
+				res.status(404).json({
+					success: false,
+					message: "User not found",
+				});
+				return;
+			}
 
-  // Delete user
-  static delete(req: Request, res: Response): void {
-    try {
-      const { id } = req.params;
+			const updateData: {
+				name?: string;
+				age?: number;
+				email?: string;
+				is_email_verified?: number;
+				updated_at: Date;
+				last_login_at?: Date | null;
+			} = {
+				updated_at: new Date(),
+			};
 
-      if (!id) {
-        res.status(400).json({
-          success: false,
-          message: 'User ID is required',
-        });
-        return;
-      }
+			if (name !== undefined) {
+				updateData.name = name;
+			}
 
-      const deleted = User.delete(parseInt(id));
+			if (age !== undefined) {
+				const parsedAge = Number(age);
+				if (!Number.isInteger(parsedAge) || parsedAge <= 0) {
+					res.status(400).json({
+						success: false,
+						message: "age must be a positive integer",
+					});
+					return;
+				}
+				updateData.age = parsedAge;
+			}
 
-      if (!deleted) {
-        res.status(404).json({
-          success: false,
-          message: 'User not found',
-        });
-        return;
-      }
+			if (email !== undefined) {
+				updateData.email = email;
+			}
 
-      res.status(200).json({
-        success: true,
-        message: 'User deleted successfully',
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: 'Error deleting user',
-      });
-    }
-  }
+
+			if (is_email_verified !== undefined) {
+				updateData.is_email_verified = Number(is_email_verified) ? 1 : 0;
+			}
+
+			if (last_login_at !== undefined) {
+				updateData.last_login_at =
+					last_login_at === null ? null : new Date(last_login_at);
+			}
+
+			await db.update(usersTable).set(updateData).where(eq(usersTable.id, id));
+
+			const updatedUser = await db
+				.select()
+				.from(usersTable)
+				.where(eq(usersTable.id, id))
+				.limit(1);
+
+			res.status(200).json({
+				success: true,
+				data: updatedUser[0],
+				message: "User updated successfully",
+			});
+		} catch (error) {
+			console.error("Error updating user:", error);
+			res.status(500).json({
+				success: false,
+				message: "Failed to update user",
+			});
+		}
+	}
+
+	static async delete(req: Request, res: Response): Promise<void> {
+		try {
+			const id = Number(req.params.id);
+
+			if (!Number.isInteger(id) || id <= 0) {
+				res.status(400).json({
+					success: false,
+					message: "Valid user ID is required",
+				});
+				return;
+			}
+
+			const existingUser = await db
+				.select()
+				.from(usersTable)
+				.where(eq(usersTable.id, id))
+				.limit(1);
+
+			if (existingUser.length === 0) {
+				res.status(404).json({
+					success: false,
+					message: "User not found",
+				});
+				return;
+			}
+
+			await db.delete(usersTable).where(eq(usersTable.id, id));
+
+			res.status(200).json({
+				success: true,
+				message: "User deleted successfully",
+			});
+		} catch (error) {
+			console.error("Error deleting user:", error);
+			res.status(500).json({
+				success: false,
+				message: "Failed to delete user",
+			});
+		}
+	}
 }
-

@@ -5,38 +5,144 @@ const router = Router();
 
 /**
  * @swagger
+ * tags:
+ *   - name: Users
+ *     description: User management endpoints
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           example: 1
+ *         name:
+ *           type: string
+ *           example: Jane Doe
+ *         age:
+ *           type: integer
+ *           example: 24
+ *         email:
+ *           type: string
+ *           format: email
+ *           example: jane@example.com
+ *         password_hash:
+ *           type: string
+ *           example: $2b$10$examplehash
+ *         is_email_verified:
+ *           type: integer
+ *           enum: [0, 1]
+ *           example: 0
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *         last_login_at:
+ *           type: string
+ *           format: date-time
+ *           nullable: true
+ *
+ *     CreateUserRequest:
+ *       type: object
+ *       required:
+ *         - name
+ *         - age
+ *         - email
+ *         - password_hash
+ *       properties:
+ *         name:
+ *           type: string
+ *           example: John Doe
+ *         age:
+ *           type: integer
+ *           example: 22
+ *         email:
+ *           type: string
+ *           format: email
+ *           example: john@example.com
+ *         password_hash:
+ *           type: string
+ *           example: $2b$10$examplehash
+ *
+ *     UpdateUserRequest:
+ *       type: object
+ *       properties:
+ *         name:
+ *           type: string
+ *           example: Updated Name
+ *         age:
+ *           type: integer
+ *           example: 25
+ *         email:
+ *           type: string
+ *           format: email
+ *           example: updated@example.com
+ *         password_hash:
+ *           type: string
+ *         is_email_verified:
+ *           type: integer
+ *           enum: [0, 1]
+ *         last_login_at:
+ *           type: string
+ *           format: date-time
+ *           nullable: true
+ *
+ *     ApiResponseUsers:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *         data:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/User'
+ *         message:
+ *           type: string
+ *
+ *     ApiResponseUser:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *         data:
+ *           $ref: '#/components/schemas/User'
+ *         message:
+ *           type: string
+ *
+ *     ApiResponseMessage:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *         message:
+ *           type: string
+ */
+
+/**
+ * @swagger
  * /api/users:
  *   get:
  *     summary: Get all users
  *     tags: [Users]
  *     responses:
  *       200:
- *         description: Successfully retrieved all users
+ *         description: Users retrieved successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: number
- *                       name:
- *                         type: string
- *                       email:
- *                         type: string
- *                       createdAt:
- *                         type: string
- *                         format: date-time
- *                 message:
- *                   type: string
+ *               $ref: '#/components/schemas/ApiResponseUsers'
  *       500:
- *         description: Server error
+ *         description: Failed to retrieve users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponseMessage'
  */
 router.get('/', UserController.getAll);
 
@@ -59,30 +165,25 @@ router.get('/', UserController.getAll);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: number
- *                     name:
- *                       type: string
- *                     email:
- *                       type: string
- *                     createdAt:
- *                       type: string
- *                       format: date-time
- *                 message:
- *                   type: string
+ *               $ref: '#/components/schemas/ApiResponseUser'
  *       400:
- *         description: User ID is required
+ *         description: Valid user ID is required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponseMessage'
  *       404:
  *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponseMessage'
  *       500:
- *         description: Server error
+ *         description: Failed to retrieve user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponseMessage'
  */
 router.get('/:id', UserController.getById);
 
@@ -97,46 +198,26 @@ router.get('/:id', UserController.getById);
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - name
- *               - email
- *             properties:
- *               name:
- *                 type: string
- *                 example: John Doe
- *               email:
- *                 type: string
- *                 format: email
- *                 example: john@example.com
+ *             $ref: '#/components/schemas/CreateUserRequest'
  *     responses:
  *       201:
  *         description: User created successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: number
- *                     name:
- *                       type: string
- *                     email:
- *                       type: string
- *                     createdAt:
- *                       type: string
- *                       format: date-time
- *                 message:
- *                   type: string
+ *               $ref: '#/components/schemas/ApiResponseUser'
  *       400:
- *         description: Name and email are required
+ *         description: Missing required fields or invalid age
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponseMessage'
  *       500:
- *         description: Server error
+ *         description: Failed to create user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponseMessage'
  */
 router.post('/', UserController.create);
 
@@ -144,7 +225,7 @@ router.post('/', UserController.create);
  * @swagger
  * /api/users/{id}:
  *   put:
- *     summary: Update an existing user
+ *     summary: Update a user by ID
  *     tags: [Users]
  *     parameters:
  *       - in: path
@@ -158,48 +239,32 @@ router.post('/', UserController.create);
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - name
- *               - email
- *             properties:
- *               name:
- *                 type: string
- *                 example: Jane Doe
- *               email:
- *                 type: string
- *                 format: email
- *                 example: jane@example.com
+ *             $ref: '#/components/schemas/UpdateUserRequest'
  *     responses:
  *       200:
  *         description: User updated successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: number
- *                     name:
- *                       type: string
- *                     email:
- *                       type: string
- *                     createdAt:
- *                       type: string
- *                       format: date-time
- *                 message:
- *                   type: string
+ *               $ref: '#/components/schemas/ApiResponseUser'
  *       400:
- *         description: Invalid request
+ *         description: Invalid user ID or invalid field value
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponseMessage'
  *       404:
  *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponseMessage'
  *       500:
- *         description: Server error
+ *         description: Failed to update user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponseMessage'
  */
 router.put('/:id', UserController.update);
 
@@ -207,7 +272,7 @@ router.put('/:id', UserController.update);
  * @swagger
  * /api/users/{id}:
  *   delete:
- *     summary: Delete a user
+ *     summary: Delete a user by ID
  *     tags: [Users]
  *     parameters:
  *       - in: path
@@ -222,18 +287,25 @@ router.put('/:id', UserController.update);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
+ *               $ref: '#/components/schemas/ApiResponseMessage'
  *       400:
- *         description: User ID is required
+ *         description: Valid user ID is required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponseMessage'
  *       404:
  *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponseMessage'
  *       500:
- *         description: Server error
+ *         description: Failed to delete user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponseMessage'
  */
 router.delete('/:id', UserController.delete);
 

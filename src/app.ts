@@ -3,6 +3,7 @@ import type { Express } from 'express';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger.js';
 import userRoutes from './routes/userRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 import { ErrorHandler } from './middleware/errorHandler.js';
 
 const app: Express = express();
@@ -21,6 +22,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 }));
 
 // Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 
 // Welcome route
@@ -29,7 +31,9 @@ app.get('/', (req, res) => {
     message: 'Welcome to MVC API',
     version: '1.0.0',
     endpoints: {
+      auth: '/api/auth',
       users: '/api/users',
+      docs: '/api-docs',
     },
   });
 });

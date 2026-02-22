@@ -44,6 +44,7 @@
     "esm": true,
     "experimentalEsm": true,
     "resolveJsonModule": true
-  }
+  },
+  "include": ["src/**/*.ts"]
 }
 
