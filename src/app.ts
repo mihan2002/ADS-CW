@@ -4,6 +4,7 @@ import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger.js';
 import userRoutes from './routes/userRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import alumniRoutes from './routes/alumniRoutes.js';
 import { ErrorHandler } from './middleware/errorHandler.js';
 
 const app: Express = express();
@@ -11,6 +12,9 @@ const app: Express = express();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static files for uploaded images
+app.use('/uploads', express.static('uploads'));
 
 // Swagger documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
@@ -24,6 +28,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/alumni', alumniRoutes);
 
 // Welcome route
 app.get('/', (req, res) => {
@@ -32,6 +37,7 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     endpoints: {
       auth: '/api/auth',
+      alumni: '/api/alumni',
       users: '/api/users',
       docs: '/api-docs',
     },

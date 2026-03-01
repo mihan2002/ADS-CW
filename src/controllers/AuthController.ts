@@ -63,6 +63,7 @@ export class AuthController {
         userId: user.id,
         email: user.email,
         name: user.name,
+        role: user.role,
       });
 
       // Return success response with tokens and user info
@@ -75,6 +76,7 @@ export class AuthController {
             name: user.name,
             email: user.email,
             age: user.age,
+            role: user.role,
             is_email_verified: user.is_email_verified,
             last_login_at: new Date(),
           },
@@ -165,6 +167,7 @@ export class AuthController {
         userId: user.id,
         email: user.email,
         name: user.name,
+        role: user.role,
       });
 
       res.status(200).json({
@@ -210,6 +213,7 @@ export class AuthController {
             userId: payload.userId,
             email: payload.email,
             name: payload.name,
+            role: payload.role,
           },
         });
       } catch (error) {

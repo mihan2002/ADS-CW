@@ -7,6 +7,7 @@ export class User implements IUser {
   name: string;
   age: number;
   email: string;
+  role: string;
   is_email_verified: boolean;
   created_at: Date;
   updated_at: Date;
@@ -18,6 +19,7 @@ export class User implements IUser {
     name: string,
     age: number,
     email: string,
+    role: string,
     is_email_verified: boolean,
     created_at: Date,
     updated_at: Date,
@@ -28,6 +30,7 @@ export class User implements IUser {
     this.name = name;
     this.age = age;
     this.email = email;
+    this.role = role;
     this.is_email_verified = is_email_verified;
     this.created_at = created_at;
     this.updated_at = updated_at;

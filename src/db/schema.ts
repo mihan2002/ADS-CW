@@ -15,6 +15,7 @@ export const usersTable = mysqlTable("users", {
   age: int().notNull(),
   email: varchar({ length: 255 }).notNull().unique(),
   password_hash: varchar({ length: 255 }).notNull(),
+  role: varchar({ length: 50 }).notNull().default('user'),
   is_email_verified: int().notNull().default(0),
   
   created_at: timestamp().notNull(),
@@ -96,6 +97,18 @@ export const licensesTable = mysqlTable("licenses", {
   name: varchar({ length: 255 }).notNull(),
   awarding_body: varchar({ length: 255 }).notNull(),
   license_url: varchar({ length: 255 }),
+  completed_on: timestamp(),
+  created_at: timestamp().notNull(),
+});
+
+export const professionalCoursesTable = mysqlTable("professional_courses", {
+  id: serial().primaryKey(),
+  user_id: int()
+    .notNull()
+    .references(() => usersTable.id, { onDelete: "cascade" }),
+  title: varchar({ length: 255 }).notNull(),
+  provider: varchar({ length: 255 }).notNull(),
+  course_url: varchar({ length: 255 }),
   completed_on: timestamp(),
   created_at: timestamp().notNull(),
 });

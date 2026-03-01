@@ -55,6 +55,10 @@ const router = Router();
  *                 age:
  *                   type: integer
  *                   example: 30
+ *                 role:
+ *                   type: string
+ *                   enum: [user, admin, moderator]
+ *                   example: user
  *                 is_email_verified:
  *                   type: integer
  *                   example: 1

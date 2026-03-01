@@ -66,7 +66,7 @@ export class UserController {
 	static async create(req: Request, res: Response): Promise<void> {
 		try {
       
-			const { name, age, email, password } = req.body;
+			const { name, age, email, password, role } = req.body;
 			console.log("🚀 ~ UserController ~ create ~ req.body:", req.body)
 
 			if (!name || !email || !password || age === undefined) {
@@ -86,6 +86,17 @@ export class UserController {
 				return;
 			}
 
+			// Validate role
+			const validRoles = ['user', 'admin', 'moderator'];
+			const userRole = role || 'user';
+			if (!validRoles.includes(userRole)) {
+				res.status(400).json({
+					success: false,
+					message: "role must be one of: user, admin, moderator",
+				});
+				return;
+			}
+
 			const now = new Date();
 
 			const created = await db
@@ -95,6 +106,7 @@ export class UserController {
 					age: parsedAge,
 					email,
 					password_hash: await bcrypt.hash(password, 10),
+					role: userRole,
 					is_email_verified: 0,
 					created_at: now,
 					updated_at: now,
@@ -144,7 +156,7 @@ export class UserController {
 				return;
 			}
 
-			const { name, age, email, is_email_verified, last_login_at } =
+			const { name, age, email, is_email_verified, last_login_at, role } =
 				req.body;
 
 			const existingUser = await db
@@ -165,6 +177,7 @@ export class UserController {
 				name?: string;
 				age?: number;
 				email?: string;
+				role?: string;
 				is_email_verified?: number;
 				updated_at: Date;
 				last_login_at?: Date | null;
@@ -190,6 +203,18 @@ export class UserController {
 
 			if (email !== undefined) {
 				updateData.email = email;
+			}
+
+			if (role !== undefined) {
+				const validRoles = ['user', 'admin', 'moderator'];
+				if (!validRoles.includes(role)) {
+					res.status(400).json({
+						success: false,
+						message: "role must be one of: user, admin, moderator",
+					});
+					return;
+				}
+				updateData.role = role;
 			}
 
 

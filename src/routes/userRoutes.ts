@@ -33,6 +33,10 @@ const router = Router();
  *         password_hash:
  *           type: string
  *           example: $2b$10$examplehash
+ *         role:
+ *           type: string
+ *           enum: [user, admin, moderator]
+ *           example: user
  *         is_email_verified:
  *           type: integer
  *           enum: [0, 1]
@@ -69,6 +73,11 @@ const router = Router();
  *         password_hash:
  *           type: string
  *           example: $2b$10$examplehash
+ *         role:
+ *           type: string
+ *           enum: [user, admin, moderator]
+ *           example: user
+ *           description: User role (defaults to 'user' if not provided)
  *
  *     UpdateUserRequest:
  *       type: object
@@ -85,6 +94,10 @@ const router = Router();
  *           example: updated@example.com
  *         password_hash:
  *           type: string
+ *         role:
+ *           type: string
+ *           enum: [user, admin, moderator]
+ *           example: user
  *         is_email_verified:
  *           type: integer
  *           enum: [0, 1]

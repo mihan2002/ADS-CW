@@ -9,6 +9,7 @@ export interface JWTPayload {
   userId: number;
   email: string;
   name: string;
+  role: string;
 }
 
 export class JWTUtils {

@@ -137,6 +137,7 @@ CREATE TABLE `users` (
 	`email` varchar(255) NOT NULL,
 	`password_hash` varchar(255) NOT NULL,
 	`is_email_verified` int NOT NULL DEFAULT 0,
+	`role` varchar(50) NOT NULL DEFAULT 'user',
 	`created_at` timestamp NOT NULL,
 	`updated_at` timestamp NOT NULL,
 	`last_login_at` timestamp,
