@@ -374,6 +374,43 @@ router.post(
 	AlumniController.uploadProfileImage,
 );
 
+/**
+ * @swagger
+ * /api/alumni/{userId}/profile:
+ *   delete:
+ *     summary: Delete alumni profile
+ *     description: Permanently deletes the alumni profile for the given user. All related sub-records (degrees, certifications, licenses, courses, employment history) are removed automatically via cascade.
+ *     tags: [Alumni]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: Alumni profile deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Alumni profile deleted successfully
+ *       400:
+ *         description: Invalid user ID
+ *       404:
+ *         description: User or alumni profile not found
+ *       500:
+ *         description: Server error
+ */
+router.delete("/:userId/profile", AlumniController.deleteProfile);
+
 // ====================
 // Degree Routes
 // ====================

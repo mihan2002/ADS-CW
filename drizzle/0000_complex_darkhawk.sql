@@ -1,160 +1,173 @@
-CREATE TABLE `alumni_event_participation` (
-	`id` serial AUTO_INCREMENT NOT NULL,
-	`user_id` int NOT NULL,
-	`event_date` date NOT NULL,
-	`created_at` timestamp NOT NULL,
-	CONSTRAINT `alumni_event_participation_id` PRIMARY KEY(`id`)
-);
---> statement-breakpoint
-CREATE TABLE `alumni_profiles` (
-	`user_id` int NOT NULL,
-	`first_name` varchar(255) NOT NULL,
-	`last_name` varchar(255) NOT NULL,
-	`bio` varchar(1000),
-	`graduation_year` int,
-	`degree` varchar(255),
-	`current_position` varchar(255),
-	`linkedin_url` varchar(255),
-	`profile_image_id` int,
-	`appearance_count` int DEFAULT 0,
-	`created_at` timestamp NOT NULL,
-	`updated_at` timestamp NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE `bids` (
-	`id` serial AUTO_INCREMENT NOT NULL,
-	`user_id` int NOT NULL,
-	`amount` decimal NOT NULL,
-	`status` varchar(255) NOT NULL,
-	`created_at` timestamp NOT NULL,
-	`updated_at` timestamp NOT NULL,
-	CONSTRAINT `bids_id` PRIMARY KEY(`id`)
-);
---> statement-breakpoint
-CREATE TABLE `certifications` (
-	`id` serial AUTO_INCREMENT NOT NULL,
-	`user_id` int NOT NULL,
-	`name` varchar(255) NOT NULL,
-	`provider` varchar(255) NOT NULL,
-	`course_url` varchar(255),
-	`completed_on` timestamp,
-	`created_at` timestamp NOT NULL,
-	CONSTRAINT `certifications_id` PRIMARY KEY(`id`)
-);
---> statement-breakpoint
-CREATE TABLE `degrees` (
-	`id` serial AUTO_INCREMENT NOT NULL,
-	`user_id` int NOT NULL,
-	`title` varchar(255) NOT NULL,
-	`institution_name` varchar(255) NOT NULL,
-	`official_url` varchar(255),
-	`completed_on` timestamp,
-	`created_at` timestamp NOT NULL,
-	CONSTRAINT `degrees_id` PRIMARY KEY(`id`)
-);
---> statement-breakpoint
-CREATE TABLE `email_verification_tokens` (
-	`id` serial AUTO_INCREMENT NOT NULL,
-	`user_id` int NOT NULL,
-	`token_hash` varchar(255) NOT NULL,
-	`expires_at` timestamp NOT NULL,
-	`used_at` timestamp,
-	`created_at` timestamp NOT NULL,
-	CONSTRAINT `email_verification_tokens_id` PRIMARY KEY(`id`),
-	CONSTRAINT `email_verification_tokens_token_hash_unique` UNIQUE(`token_hash`)
-);
---> statement-breakpoint
-CREATE TABLE `employment_history` (
-	`id` serial AUTO_INCREMENT NOT NULL,
-	`user_id` int NOT NULL,
-	`company` varchar(255) NOT NULL,
-	`job_title` varchar(255) NOT NULL,
-	`start_date` timestamp NOT NULL,
-	`end_date` timestamp,
-	`description` varchar(1000),
-	`created_at` timestamp NOT NULL,
-	`updated_at` timestamp NOT NULL,
-	CONSTRAINT `employment_history_id` PRIMARY KEY(`id`)
-);
---> statement-breakpoint
-CREATE TABLE `feature_days` (
-	`id` serial AUTO_INCREMENT NOT NULL,
-	`day` date,
-	`winner_user_id` int,
-	`winning_bid_id` int,
-	`selected_at` timestamp,
-	CONSTRAINT `feature_days_id` PRIMARY KEY(`id`)
-);
---> statement-breakpoint
-CREATE TABLE `licenses` (
-	`id` serial AUTO_INCREMENT NOT NULL,
-	`user_id` int NOT NULL,
-	`name` varchar(255) NOT NULL,
-	`awarding_body` varchar(255) NOT NULL,
-	`license_url` varchar(255),
-	`completed_on` timestamp,
-	`created_at` timestamp NOT NULL,
-	CONSTRAINT `licenses_id` PRIMARY KEY(`id`)
-);
---> statement-breakpoint
-CREATE TABLE `password_reset_tokens` (
-	`id` serial AUTO_INCREMENT NOT NULL,
-	`user_id` int NOT NULL,
-	`token_hash` varchar(255) NOT NULL,
-	`expires_at` timestamp NOT NULL,
-	`used_at` timestamp,
-	`created_at` timestamp NOT NULL,
-	CONSTRAINT `password_reset_tokens_id` PRIMARY KEY(`id`),
-	CONSTRAINT `password_reset_tokens_token_hash_unique` UNIQUE(`token_hash`)
-);
---> statement-breakpoint
-CREATE TABLE `sponsors` (
-	`id` serial AUTO_INCREMENT NOT NULL,
-	`name` varchar(255) NOT NULL,
-	`website_url` varchar(255),
-	`created_at` timestamp NOT NULL,
-	`updated_at` timestamp NOT NULL,
-	CONSTRAINT `sponsors_id` PRIMARY KEY(`id`)
-);
---> statement-breakpoint
-CREATE TABLE `sponsorship_offers` (
-	`id` serial AUTO_INCREMENT NOT NULL,
-	`sponsor_id` int NOT NULL,
-	`user_id` int NOT NULL,
-	`offer_type` varchar(255) NOT NULL,
-	`reference_id` int NOT NULL,
-	`offer_amount` decimal NOT NULL,
-	`status` varchar(255) NOT NULL,
-	`created_at` timestamp NOT NULL,
-	`expires_at` timestamp NOT NULL,
-	CONSTRAINT `sponsorship_offers_id` PRIMARY KEY(`id`)
-);
---> statement-breakpoint
 CREATE TABLE `users` (
-	`id` serial AUTO_INCREMENT NOT NULL,
-	`name` varchar(255) NOT NULL,
-	`age` int NOT NULL,
-	`email` varchar(255) NOT NULL,
-	`password_hash` varchar(255) NOT NULL,
-	`is_email_verified` int NOT NULL DEFAULT 0,
-	`role` varchar(50) NOT NULL DEFAULT 'user',
-	`created_at` timestamp NOT NULL,
-	`updated_at` timestamp NOT NULL,
-	`last_login_at` timestamp,
-	CONSTRAINT `users_id` PRIMARY KEY(`id`),
-	CONSTRAINT `users_email_unique` UNIQUE(`email`)
+	`id` INT AUTO_INCREMENT NOT NULL,
+	`name` VARCHAR(255) NOT NULL,
+	`age` INT NOT NULL,
+	`email` VARCHAR(255) NOT NULL,
+	`password_hash` VARCHAR(255) NOT NULL,
+	`is_email_verified` INT NOT NULL DEFAULT 0,
+	`role` VARCHAR(50) NOT NULL DEFAULT 'user',
+	`created_at` TIMESTAMP NOT NULL,
+	`updated_at` TIMESTAMP NOT NULL,
+	`last_login_at` TIMESTAMP,
+	PRIMARY KEY (`id`),
+	UNIQUE (`email`)
 );
---> statement-breakpoint
-ALTER TABLE `alumni_event_participation` ADD CONSTRAINT `alumni_event_participation_user_id_users_id_fk` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `alumni_profiles` ADD CONSTRAINT `alumni_profiles_user_id_users_id_fk` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `bids` ADD CONSTRAINT `bids_user_id_users_id_fk` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `certifications` ADD CONSTRAINT `certifications_user_id_users_id_fk` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `degrees` ADD CONSTRAINT `degrees_user_id_users_id_fk` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `email_verification_tokens` ADD CONSTRAINT `email_verification_tokens_user_id_users_id_fk` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `employment_history` ADD CONSTRAINT `employment_history_user_id_users_id_fk` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `feature_days` ADD CONSTRAINT `feature_days_winner_user_id_users_id_fk` FOREIGN KEY (`winner_user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `feature_days` ADD CONSTRAINT `feature_days_winning_bid_id_bids_id_fk` FOREIGN KEY (`winning_bid_id`) REFERENCES `bids`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `licenses` ADD CONSTRAINT `licenses_user_id_users_id_fk` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `password_reset_tokens` ADD CONSTRAINT `password_reset_tokens_user_id_users_id_fk` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `sponsorship_offers` ADD CONSTRAINT `sponsorship_offers_sponsor_id_sponsors_id_fk` FOREIGN KEY (`sponsor_id`) REFERENCES `sponsors`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `sponsorship_offers` ADD CONSTRAINT `sponsorship_offers_user_id_users_id_fk` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE cascade ON UPDATE no action;
+
+CREATE TABLE `sponsors` (
+	`id` INT AUTO_INCREMENT NOT NULL,
+	`name` VARCHAR(255) NOT NULL,
+	`website_url` VARCHAR(255),
+	`created_at` TIMESTAMP NOT NULL,
+	`updated_at` TIMESTAMP NOT NULL,
+	PRIMARY KEY (`id`)
+);
+
+CREATE TABLE `alumni_event_participation` (
+	`id` INT AUTO_INCREMENT NOT NULL,
+	`user_id` INT NOT NULL,
+	`event_date` DATE NOT NULL,
+	`created_at` TIMESTAMP NOT NULL,
+	PRIMARY KEY (`id`),
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
+);
+
+CREATE TABLE `alumni_profiles` (
+	`user_id` INT NOT NULL,
+	`first_name` VARCHAR(255) NOT NULL,
+	`last_name` VARCHAR(255) NOT NULL,
+	`bio` VARCHAR(1000),
+	`graduation_year` INT,
+	`degree` VARCHAR(255),
+	`current_position` VARCHAR(255),
+	`linkedin_url` VARCHAR(255),
+	`profile_image_id` INT,
+	`appearance_count` INT DEFAULT 0,
+	`created_at` TIMESTAMP NOT NULL,
+	`updated_at` TIMESTAMP NOT NULL,
+	PRIMARY KEY (`user_id`),
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE `bids` (
+	`id` INT AUTO_INCREMENT NOT NULL,
+	`user_id` INT NOT NULL,
+	`amount` DECIMAL(10,2) NOT NULL,
+	`status` VARCHAR(255) NOT NULL,
+	`created_at` TIMESTAMP NOT NULL,
+	`updated_at` TIMESTAMP NOT NULL,
+	PRIMARY KEY (`id`),
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
+);
+
+CREATE TABLE `professional_courses` (
+	`id` INT AUTO_INCREMENT NOT NULL,
+	`user_id` INT NOT NULL,
+	`title` VARCHAR(255) NOT NULL,
+	`provider` VARCHAR(255) NOT NULL,
+	`course_url` VARCHAR(255),
+	`completed_on` TIMESTAMP,
+	`created_at` TIMESTAMP NOT NULL,
+	`updated_at` TIMESTAMP NOT NULL,
+	PRIMARY KEY (`id`),
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE `certifications` (
+	`id` INT AUTO_INCREMENT NOT NULL,
+	`user_id` INT NOT NULL,
+	`name` VARCHAR(255) NOT NULL,
+	`provider` VARCHAR(255) NOT NULL,
+	`course_url` VARCHAR(255),
+	`completed_on` TIMESTAMP,
+	`created_at` TIMESTAMP NOT NULL,
+	PRIMARY KEY (`id`),
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE `degrees` (
+	`id` INT AUTO_INCREMENT NOT NULL,
+	`user_id` INT NOT NULL,
+	`title` VARCHAR(255) NOT NULL,
+	`institution_name` VARCHAR(255) NOT NULL,
+	`official_url` VARCHAR(255),
+	`completed_on` TIMESTAMP,
+	`created_at` TIMESTAMP NOT NULL,
+	PRIMARY KEY (`id`),
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE `employment_history` (
+	`id` INT AUTO_INCREMENT NOT NULL,
+	`user_id` INT NOT NULL,
+	`company` VARCHAR(255) NOT NULL,
+	`job_title` VARCHAR(255) NOT NULL,
+	`start_date` TIMESTAMP NOT NULL,
+	`end_date` TIMESTAMP,
+	`description` VARCHAR(1000),
+	`created_at` TIMESTAMP NOT NULL,
+	`updated_at` TIMESTAMP NOT NULL,
+	PRIMARY KEY (`id`),
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE `licenses` (
+	`id` INT AUTO_INCREMENT NOT NULL,
+	`user_id` INT NOT NULL,
+	`name` VARCHAR(255) NOT NULL,
+	`awarding_body` VARCHAR(255) NOT NULL,
+	`license_url` VARCHAR(255),
+	`completed_on` TIMESTAMP,
+	`created_at` TIMESTAMP NOT NULL,
+	PRIMARY KEY (`id`),
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE `email_verification_tokens` (
+	`id` INT AUTO_INCREMENT NOT NULL,
+	`user_id` INT NOT NULL,
+	`token_hash` VARCHAR(255) NOT NULL,
+	`expires_at` TIMESTAMP NOT NULL,
+	`used_at` TIMESTAMP,
+	`created_at` TIMESTAMP NOT NULL,
+	PRIMARY KEY (`id`),
+	UNIQUE (`token_hash`),
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE `password_reset_tokens` (
+	`id` INT AUTO_INCREMENT NOT NULL,
+	`user_id` INT NOT NULL,
+	`token_hash` VARCHAR(255) NOT NULL,
+	`expires_at` TIMESTAMP NOT NULL,
+	`used_at` TIMESTAMP,
+	`created_at` TIMESTAMP NOT NULL,
+	PRIMARY KEY (`id`),
+	UNIQUE (`token_hash`),
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE `feature_days` (
+	`id` INT AUTO_INCREMENT NOT NULL,
+	`day` DATE,
+	`winner_user_id` INT,
+	`winning_bid_id` INT,
+	`selected_at` TIMESTAMP,
+	PRIMARY KEY (`id`),
+	FOREIGN KEY (`winner_user_id`) REFERENCES `users`(`id`),
+	FOREIGN KEY (`winning_bid_id`) REFERENCES `bids`(`id`)
+);
+
+CREATE TABLE `sponsorship_offers` (
+	`id` INT AUTO_INCREMENT NOT NULL,
+	`sponsor_id` INT NOT NULL,
+	`user_id` INT NOT NULL,
+	`offer_type` VARCHAR(255) NOT NULL,
+	`reference_id` INT NOT NULL,
+	`offer_amount` DECIMAL(10,2) NOT NULL,
+	`status` VARCHAR(255) NOT NULL,
+	`created_at` TIMESTAMP NOT NULL,
+	`expires_at` TIMESTAMP NOT NULL,
+	PRIMARY KEY (`id`),
+	FOREIGN KEY (`sponsor_id`) REFERENCES `sponsors`(`id`) ON DELETE CASCADE,
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+);
