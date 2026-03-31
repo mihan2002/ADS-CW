@@ -1,4 +1,4 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { db } from "../db/index.js";
 import {
   alumniProfilesTable,
@@ -8,6 +8,7 @@ import {
   professionalCoursesTable,
   employmentHistoryTable,
   usersTable,
+  bidsTable,
 } from "../db/schema.js";
 import type {
   CreateOrUpdateProfileDto,
@@ -21,6 +22,8 @@ import type {
   UpdateProfessionalCourseDto,
   AddEmploymentHistoryDto,
   UpdateEmploymentHistoryDto,
+  PlaceBidDto,
+  UpdateBidDto,
 } from "../dtos/alumni.dto.js";
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
@@ -536,5 +539,113 @@ export class AlumniService {
     if (rows.length === 0) notFound("Employment history not found");
 
     await db.delete(employmentHistoryTable).where(eq(employmentHistoryTable.id, employmentId));
+  }
+
+  // ─── Bids ────────────────────────────────────────────────────────────────────────
+  static async placeBid(userId: number, dto: PlaceBidDto) {
+    await assertUserExists(userId);
+
+    const now = new Date();
+
+    const created = await db
+      .insert(bidsTable)
+      .values({
+        user_id: userId,
+        amount: String(dto.amount),
+        status: "pending",
+        created_at: now,
+        updated_at: now,
+      })
+      .$returningId();
+
+    const bidId = created[0]?.id;
+    if (bidId === undefined) {
+      const err = new Error("Failed to place bid");
+      (err as any).statusCode = 500;
+      throw err;
+    }
+
+    const rows = await db
+      .select()
+      .from(bidsTable)
+      .where(eq(bidsTable.id, bidId))
+      .limit(1);
+
+    return rows[0]!;
+  }
+
+  static async updateBid(userId: number, bidId: number, dto: UpdateBidDto) {
+    const rows = await db
+      .select()
+      .from(bidsTable)
+      .where(and(eq(bidsTable.id, bidId), eq(bidsTable.user_id, userId)))
+      .limit(1);
+
+    if (rows.length === 0) notFound("Bid not found");
+
+    const bid = rows[0]!;
+    if (bid.status !== "pending") {
+      const err = new Error(`Cannot update a bid with status "${bid.status}". Only pending bids can be updated.`);
+      (err as any).statusCode = 409;
+      throw err;
+    }
+
+    await db
+      .update(bidsTable)
+      .set({ amount: String(dto.amount), updated_at: new Date() })
+      .where(eq(bidsTable.id, bidId));
+
+    const updated = await db
+      .select()
+      .from(bidsTable)
+      .where(eq(bidsTable.id, bidId))
+      .limit(1);
+
+    return updated[0]!;
+  }
+
+  static async cancelBid(userId: number, bidId: number): Promise<void> {
+    const rows = await db
+      .select()
+      .from(bidsTable)
+      .where(and(eq(bidsTable.id, bidId), eq(bidsTable.user_id, userId)))
+      .limit(1);
+
+    if (rows.length === 0) notFound("Bid not found");
+
+    const bid = rows[0]!;
+    if (bid.status === "cancelled") {
+      const err = new Error("Bid is already cancelled");
+      (err as any).statusCode = 409;
+      throw err;
+    }
+
+    await db
+      .update(bidsTable)
+      .set({ status: "cancelled", updated_at: new Date() })
+      .where(eq(bidsTable.id, bidId));
+  }
+
+  static async getMyBidStatus(userId: number) {
+    await assertUserExists(userId);
+
+    const rows = await db
+      .select()
+      .from(bidsTable)
+      .where(eq(bidsTable.user_id, userId))
+      .orderBy(desc(bidsTable.created_at))
+      .limit(1);
+
+    return rows[0] ?? null;
+  }
+
+  static async getBiddingHistory(userId: number) {
+    await assertUserExists(userId);
+
+    return db
+      .select()
+      .from(bidsTable)
+      .where(eq(bidsTable.user_id, userId))
+      .orderBy(desc(bidsTable.created_at));
   }
 }

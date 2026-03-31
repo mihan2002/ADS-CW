@@ -89,3 +89,18 @@ export type AddEmploymentHistoryDto = z.infer<typeof AddEmploymentHistoryDto>;
 
 export const UpdateEmploymentHistoryDto = AddEmploymentHistoryDto.partial();
 export type UpdateEmploymentHistoryDto = z.infer<typeof UpdateEmploymentHistoryDto>;
+
+// ─── Bid ──────────────────────────────────────────────────────────────────────
+export const PlaceBidDto = z.object({
+  amount: z
+    .number({ message: "Amount must be a number" })
+    .positive("Amount must be greater than 0"),
+});
+export type PlaceBidDto = z.infer<typeof PlaceBidDto>;
+
+export const UpdateBidDto = z.object({
+  amount: z
+    .number({ message: "Amount must be a number" })
+    .positive("Amount must be greater than 0"),
+});
+export type UpdateBidDto = z.infer<typeof UpdateBidDto>;

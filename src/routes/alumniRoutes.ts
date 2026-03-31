@@ -1074,4 +1074,286 @@ router.delete(
 	AlumniController.deleteEmploymentHistory,
 );
 
+// ====================
+// Bid Routes
+// ====================
+
+/**
+ * @swagger
+ * /api/alumni/{userId}/bids:
+ *   get:
+ *     summary: Get bidding history
+ *     description: Returns all bids placed by the user, ordered from newest to oldest.
+ *     tags: [Alumni]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: Bidding history retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       user_id:
+ *                         type: integer
+ *                       amount:
+ *                         type: string
+ *                         example: "150.00"
+ *                       status:
+ *                         type: string
+ *                         example: pending
+ *                       created_at:
+ *                         type: string
+ *                         format: date-time
+ *                       updated_at:
+ *                         type: string
+ *                         format: date-time
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Invalid user ID
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+router.get("/:userId/bids", AlumniController.getBiddingHistory);
+
+/**
+ * @swagger
+ * /api/alumni/{userId}/bids/status:
+ *   get:
+ *     summary: Get my current bid status
+ *     description: Returns the most recently placed bid for the user (regardless of status).
+ *     tags: [Alumni]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: Bid status retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   nullable: true
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     user_id:
+ *                       type: integer
+ *                     amount:
+ *                       type: string
+ *                       example: "150.00"
+ *                     status:
+ *                       type: string
+ *                       example: pending
+ *                     created_at:
+ *                       type: string
+ *                       format: date-time
+ *                     updated_at:
+ *                       type: string
+ *                       format: date-time
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Invalid user ID
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+router.get("/:userId/bids/status", AlumniController.getMyBidStatus);
+
+/**
+ * @swagger
+ * /api/alumni/{userId}/bids:
+ *   post:
+ *     summary: Place a bid
+ *     description: Places a new bid on behalf of the specified user. The bid is created with a "pending" status.
+ *     tags: [Alumni]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - amount
+ *             properties:
+ *               amount:
+ *                 type: number
+ *                 format: float
+ *                 example: 150.00
+ *                 description: Bid amount (must be greater than 0)
+ *     responses:
+ *       201:
+ *         description: Bid placed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     user_id:
+ *                       type: integer
+ *                       example: 1
+ *                     amount:
+ *                       type: string
+ *                       example: "150.00"
+ *                     status:
+ *                       type: string
+ *                       example: pending
+ *                     created_at:
+ *                       type: string
+ *                       format: date-time
+ *                     updated_at:
+ *                       type: string
+ *                       format: date-time
+ *                 message:
+ *                   type: string
+ *                   example: Bid placed successfully
+ *       400:
+ *         description: Invalid input (missing amount, non-positive value, or bad user ID)
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+router.post("/:userId/bids", AlumniController.placeBid);
+
+/**
+ * @swagger
+ * /api/alumni/{userId}/bids/{bidId}:
+ *   put:
+ *     summary: Update a bid amount
+ *     description: Updates the amount of a pending bid. Bids that are cancelled or won cannot be updated.
+ *     tags: [Alumni]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID
+ *       - in: path
+ *         name: bidId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Bid ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - amount
+ *             properties:
+ *               amount:
+ *                 type: number
+ *                 format: float
+ *                 example: 200.00
+ *                 description: New bid amount (must be greater than 0)
+ *     responses:
+ *       200:
+ *         description: Bid updated successfully
+ *       400:
+ *         description: Invalid input
+ *       404:
+ *         description: Bid not found
+ *       409:
+ *         description: Bid is not in pending status and cannot be updated
+ *       500:
+ *         description: Server error
+ */
+router.put("/:userId/bids/:bidId", AlumniController.updateBid);
+
+/**
+ * @swagger
+ * /api/alumni/{userId}/bids/{bidId}/cancel:
+ *   patch:
+ *     summary: Cancel a bid
+ *     description: Cancels a bid by setting its status to "cancelled". Already-cancelled bids return 409.
+ *     tags: [Alumni]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID
+ *       - in: path
+ *         name: bidId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Bid ID
+ *     responses:
+ *       200:
+ *         description: Bid cancelled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Bid cancelled successfully
+ *       400:
+ *         description: Invalid user ID or bid ID
+ *       404:
+ *         description: Bid not found
+ *       409:
+ *         description: Bid is already cancelled
+ *       500:
+ *         description: Server error
+ */
+router.patch("/:userId/bids/:bidId/cancel", AlumniController.cancelBid);
+
 export default router;

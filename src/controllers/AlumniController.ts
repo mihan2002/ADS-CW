@@ -16,6 +16,8 @@ import {
   UpdateProfessionalCourseDto,
   AddEmploymentHistoryDto,
   UpdateEmploymentHistoryDto,
+  PlaceBidDto,
+  UpdateBidDto,
 } from "../dtos/alumni.dto.js";
 
 // ─── Multer config ────────────────────────────────────────────────────────────
@@ -362,6 +364,75 @@ export class AlumniController {
       }
       await AlumniService.deleteEmploymentHistory(userId, employmentId);
       res.status(200).json({ success: true, message: "Employment history deleted successfully" });
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  // ── Bids ─────────────────────────────────────────────────────────────────────────────
+
+  static async placeBid(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = requireUserId(req, res);
+      if (!userId) return;
+      const dto = PlaceBidDto.parse(req.body);
+      const bid = await AlumniService.placeBid(userId, dto);
+      res.status(201).json({ success: true, data: bid, message: "Bid placed successfully" });
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  static async updateBid(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = requireUserId(req, res);
+      if (!userId) return;
+      const bidId = parseIntParam(req.params.bidId);
+      if (!bidId) {
+        res.status(400).json({ success: false, message: "Valid bid ID is required" });
+        return;
+      }
+      const dto = UpdateBidDto.parse(req.body);
+      const bid = await AlumniService.updateBid(userId, bidId, dto);
+      res.status(200).json({ success: true, data: bid, message: "Bid updated successfully" });
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  static async cancelBid(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = requireUserId(req, res);
+      if (!userId) return;
+      const bidId = parseIntParam(req.params.bidId);
+      if (!bidId) {
+        res.status(400).json({ success: false, message: "Valid bid ID is required" });
+        return;
+      }
+      await AlumniService.cancelBid(userId, bidId);
+      res.status(200).json({ success: true, message: "Bid cancelled successfully" });
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  static async getMyBidStatus(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = requireUserId(req, res);
+      if (!userId) return;
+      const bid = await AlumniService.getMyBidStatus(userId);
+      res.status(200).json({ success: true, data: bid, message: "Bid status retrieved successfully" });
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  static async getBiddingHistory(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = requireUserId(req, res);
+      if (!userId) return;
+      const bids = await AlumniService.getBiddingHistory(userId);
+      res.status(200).json({ success: true, data: bids, message: "Bidding history retrieved successfully" });
     } catch (error) {
       handleError(res, error);
     }
