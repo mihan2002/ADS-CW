@@ -1,4 +1,4 @@
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, gte, lt } from "drizzle-orm";
 import { db } from "../db/index.js";
 import {
   alumniProfilesTable,
@@ -9,6 +9,7 @@ import {
   employmentHistoryTable,
   usersTable,
   bidsTable,
+  featureDaysTable,
 } from "../db/schema.js";
 import type {
   CreateOrUpdateProfileDto,
@@ -26,11 +27,28 @@ import type {
   UpdateBidDto,
 } from "../dtos/alumni.dto.js";
 
+// ─── Constants ────────────────────────────────────────────────────────────────
+/** Max number of times a user can win the featured-alumni slot per calendar month. */
+const MONTHLY_APPEARANCE_LIMIT = 1;
+
 // ─── Helper ───────────────────────────────────────────────────────────────────
 function notFound(message: string): never {
   const err = new Error(message);
   (err as any).statusCode = 404;
   throw err;
+}
+
+/** Format a Date as YYYY-MM-DD string (for human-readable response fields). */
+function formatDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/** Return a Date set to midnight (00:00:00.000) in local time. */
+function midnight(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
 async function assertUserExists(userId: number) {
@@ -647,5 +665,88 @@ export class AlumniService {
       .from(bidsTable)
       .where(eq(bidsTable.user_id, userId))
       .orderBy(desc(bidsTable.created_at));
+  }
+
+  // ─── Slot & Limits ────────────────────────────────────────────────────────────
+
+  /**
+   * #39 — getTomorrowSlot
+   * Returns the feature_days row for tomorrow, or null if no slot has been
+   * created yet (meaning it is open for bidding).
+   */
+  static async getTomorrowSlot() {
+    const tomorrowDate = new Date();
+    tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+    const tomorrowMidnight = midnight(tomorrowDate);
+    const tomorrowStr = formatDate(tomorrowDate);
+
+    const rows = await db
+      .select()
+      .from(featureDaysTable)
+      .where(eq(featureDaysTable.day, tomorrowMidnight))
+      .limit(1);
+
+    const slot = rows[0] ?? null;
+    return {
+      date: tomorrowStr,
+      isOpen: slot === null || slot.winner_user_id === null,
+      slot,
+    };
+  }
+
+  /**
+   * #41 — getMonthlyAppearanceCount
+   * Returns how many times the user has won the feature day this calendar month
+   * (from featureDaysTable) plus their cumulative total from alumni_profiles.
+   */
+  static async getMonthlyAppearanceCount(userId: number) {
+    await assertUserExists(userId);
+
+    const now = new Date();
+    const firstOfMonth = midnight(new Date(now.getFullYear(), now.getMonth(), 1));
+    const firstOfNextMonth = midnight(new Date(now.getFullYear(), now.getMonth() + 1, 1));
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+    const monthlyRows = await db
+      .select()
+      .from(featureDaysTable)
+      .where(
+        and(
+          eq(featureDaysTable.winner_user_id, userId),
+          gte(featureDaysTable.day, firstOfMonth),
+          lt(featureDaysTable.day, firstOfNextMonth),
+        ),
+      );
+
+    const profileRows = await db
+      .select({ appearance_count: alumniProfilesTable.appearance_count })
+      .from(alumniProfilesTable)
+      .where(eq(alumniProfilesTable.user_id, userId))
+      .limit(1);
+
+    return {
+      month: currentMonth,
+      monthlyCount: monthlyRows.length,
+      totalCount: profileRows[0]?.appearance_count ?? 0,
+    };
+  }
+
+  /**
+   * #40 — checkMonthlyLimit
+   * Checks whether the user has already reached their monthly feature-day limit.
+   * Returns current count, the cap, whether the limit is hit, and remaining slots.
+   */
+  static async checkMonthlyLimit(userId: number) {
+    await assertUserExists(userId);
+
+    const { monthlyCount, month } = await AlumniService.getMonthlyAppearanceCount(userId);
+
+    return {
+      month,
+      currentCount: monthlyCount,
+      limit: MONTHLY_APPEARANCE_LIMIT,
+      hasReachedLimit: monthlyCount >= MONTHLY_APPEARANCE_LIMIT,
+      remainingSlots: Math.max(0, MONTHLY_APPEARANCE_LIMIT - monthlyCount),
+    };
   }
 }

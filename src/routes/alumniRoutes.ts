@@ -217,6 +217,68 @@ const router = Router();
  */
 router.get("/", AlumniController.getAllProfiles);
 
+// ====================
+// Slot Routes  (must be declared BEFORE /:userId to avoid param collision)
+// ====================
+
+/**
+ * @swagger
+ * /api/alumni/slots/tomorrow:
+ *   get:
+ *     summary: Get tomorrow's feature-day slot status
+ *     description: |
+ *       Returns whether tomorrow's featured-alumni slot is open or already
+ *       assigned to a winner. `isOpen: true` means bids are still valid.
+ *     tags: [Alumni]
+ *     responses:
+ *       200:
+ *         description: Slot status retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     date:
+ *                       type: string
+ *                       example: "2026-04-02"
+ *                       description: Tomorrow's date in YYYY-MM-DD format
+ *                     isOpen:
+ *                       type: boolean
+ *                       example: true
+ *                       description: True if no winner has been selected yet
+ *                     slot:
+ *                       nullable: true
+ *                       type: object
+ *                       description: The feature_days record, or null if not yet created
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                         day:
+ *                           type: string
+ *                           format: date
+ *                         winner_user_id:
+ *                           type: integer
+ *                           nullable: true
+ *                         winning_bid_id:
+ *                           type: integer
+ *                           nullable: true
+ *                         selected_at:
+ *                           type: string
+ *                           format: date-time
+ *                           nullable: true
+ *                 message:
+ *                   type: string
+ *       500:
+ *         description: Server error
+ */
+router.get("/slots/tomorrow", AlumniController.getTomorrowSlot);
+
 /**
  * @swagger
  * /api/alumni/{userId}:
@@ -1355,5 +1417,124 @@ router.put("/:userId/bids/:bidId", AlumniController.updateBid);
  *         description: Server error
  */
 router.patch("/:userId/bids/:bidId/cancel", AlumniController.cancelBid);
+
+// ====================
+// Slot & Limit Routes
+// ====================
+
+/**
+ * @swagger
+ * /api/alumni/{userId}/appearance-count:
+ *   get:
+ *     summary: Get monthly and total appearance count
+ *     description: |
+ *       Returns how many times the specified user has won the featured-alumni
+ *       slot in the current calendar month, plus their all-time total from
+ *       `alumni_profiles.appearance_count`.
+ *     tags: [Alumni]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: Appearance count retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     month:
+ *                       type: string
+ *                       example: "2026-04"
+ *                       description: Current calendar month (YYYY-MM)
+ *                     monthlyCount:
+ *                       type: integer
+ *                       example: 0
+ *                       description: Wins in the current month
+ *                     totalCount:
+ *                       type: integer
+ *                       example: 3
+ *                       description: All-time cumulative appearance count
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Invalid user ID
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+router.get("/:userId/appearance-count", AlumniController.getMonthlyAppearanceCount);
+
+/**
+ * @swagger
+ * /api/alumni/{userId}/monthly-limit:
+ *   get:
+ *     summary: Check if user has reached their monthly bid/feature limit
+ *     description: |
+ *       Returns the monthly feature-day limit, the user's current count for
+ *       this calendar month, whether the limit has been reached, and how
+ *       many slots remain. The monthly cap is currently **1** appearance
+ *       per calendar month per alumni.
+ *     tags: [Alumni]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: Monthly limit status retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     month:
+ *                       type: string
+ *                       example: "2026-04"
+ *                     currentCount:
+ *                       type: integer
+ *                       example: 0
+ *                       description: Number of feature-day wins this month
+ *                     limit:
+ *                       type: integer
+ *                       example: 1
+ *                       description: Maximum allowed per calendar month
+ *                     hasReachedLimit:
+ *                       type: boolean
+ *                       example: false
+ *                     remainingSlots:
+ *                       type: integer
+ *                       example: 1
+ *                       description: How many more times the user can win this month
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Invalid user ID
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+router.get("/:userId/monthly-limit", AlumniController.checkMonthlyLimit);
 
 export default router;

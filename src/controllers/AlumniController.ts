@@ -437,4 +437,37 @@ export class AlumniController {
       handleError(res, error);
     }
   }
+
+  // ── Slot & Limits ─────────────────────────────────────────────────────────
+
+  static async getTomorrowSlot(_req: Request, res: Response): Promise<void> {
+    try {
+      const data = await AlumniService.getTomorrowSlot();
+      res.status(200).json({ success: true, data, message: "Tomorrow's feature slot retrieved successfully" });
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  static async getMonthlyAppearanceCount(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = requireUserId(req, res);
+      if (!userId) return;
+      const data = await AlumniService.getMonthlyAppearanceCount(userId);
+      res.status(200).json({ success: true, data, message: "Monthly appearance count retrieved successfully" });
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
+
+  static async checkMonthlyLimit(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = requireUserId(req, res);
+      if (!userId) return;
+      const data = await AlumniService.checkMonthlyLimit(userId);
+      res.status(200).json({ success: true, data, message: "Monthly bid limit retrieved successfully" });
+    } catch (error) {
+      handleError(res, error);
+    }
+  }
 }
