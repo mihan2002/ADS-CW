@@ -11,6 +11,7 @@ interface AuthState {
   isLoading: boolean;
 
   login: (email: string, password: string) => Promise<void>;
+  devLogin: () => void;
   logout: () => void;
   setTokens: (accessToken: string, refreshToken: string) => void;
   hydrate: () => void;
@@ -49,6 +50,32 @@ export const useAuthStore = create<AuthState>((set) => ({
       toast.error(message);
       throw error;
     }
+  },
+
+  devLogin: () => {
+    const dummyUser: User = {
+      id: 1,
+      name: 'Dev Admin',
+      email: 'admin@dev.local',
+      age: 30,
+      role: 'admin',
+      is_email_verified: 1,
+      last_login_at: new Date().toISOString(),
+    };
+    const dummyAccessToken = 'dev-access-token-dummy';
+    const dummyRefreshToken = 'dev-refresh-token-dummy';
+
+    localStorage.setItem('accessToken', dummyAccessToken);
+    localStorage.setItem('refreshToken', dummyRefreshToken);
+    localStorage.setItem('user', JSON.stringify(dummyUser));
+
+    set({
+      user: dummyUser,
+      accessToken: dummyAccessToken,
+      refreshToken: dummyRefreshToken,
+      isAuthenticated: true,
+      isLoading: false,
+    });
   },
 
   logout: () => {
