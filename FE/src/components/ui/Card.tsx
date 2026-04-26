@@ -21,7 +21,7 @@ export function Card({
 }: CardProps) {
   return (
     <div
-      className={`glass-card ${paddingClasses[padding]} ${hover ? '' : 'hover:transform-none hover:shadow-none'} ${className}`}
+      className={`glass-card rounded-2xl h-full flex flex-col ${paddingClasses[padding]} ${hover ? '' : 'hover:transform-none hover:shadow-none'} ${className}`}
       {...props}
     >
       {children}

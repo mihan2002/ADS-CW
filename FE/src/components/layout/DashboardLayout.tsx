@@ -10,12 +10,14 @@ export function DashboardLayout() {
     <div className="min-h-screen bg-surface-950">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      {/* Main content area */}
-      <div className="lg:ml-[280px] min-h-screen flex flex-col">
+      {/* Main content area — offset by sidebar on desktop */}
+      <div className="lg:ml-64 min-h-screen flex flex-col">
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
-        <main className="flex-1 p-4 lg:p-6">
-          <Outlet />
+        <main className="flex-1 overflow-x-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

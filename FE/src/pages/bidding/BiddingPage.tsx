@@ -120,7 +120,7 @@ export function BiddingPage() {
   return (
     <div className="space-y-6 animate-fade-in-up max-w-4xl mx-auto">
       <div>
-        <h1 className="text-2xl font-bold text-surface-100">
+        <h1 className="text-2xl font-semibold text-surface-100">
           <span className="gradient-text">Bidding</span>
         </h1>
         <p className="text-sm text-surface-500 mt-1">
@@ -129,7 +129,7 @@ export function BiddingPage() {
       </div>
 
       {/* Status Cards Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {/* Slot Status */}
         <Card padding="md" hover={false}>
           <div className="flex items-center gap-3">

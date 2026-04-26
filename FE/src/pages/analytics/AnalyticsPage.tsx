@@ -79,7 +79,7 @@ export function AnalyticsPage() {
   return (
     <div className="space-y-6 animate-fade-in-up">
       <div>
-        <h1 className="text-2xl font-bold text-surface-100">
+        <h1 className="text-2xl font-semibold text-surface-100">
           <span className="gradient-text">Analytics</span>
         </h1>
         <p className="text-sm text-surface-500 mt-1">

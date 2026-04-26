@@ -52,7 +52,7 @@ export function AlumniProfilePage() {
             <User size={40} className="text-white" />
           </div>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-surface-100">
+            <h1 className="text-2xl font-semibold text-surface-100">
               {p.first_name} {p.last_name}
             </h1>
             {p.current_position && (

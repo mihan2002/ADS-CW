@@ -29,7 +29,7 @@ export function StatCard({ icon, label, value, trend, color = 'primary' }: StatC
 
   return (
     <div
-      className={`glass-card p-5 bg-gradient-to-br ${colorMap[color] || colorMap.primary} border`}
+      className={`glass-card rounded-2xl h-full p-6 bg-gradient-to-br ${colorMap[color] || colorMap.primary} border flex flex-col`}
     >
       <div className="flex items-start justify-between">
         <div className="space-y-2">

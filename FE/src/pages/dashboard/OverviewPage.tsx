@@ -53,7 +53,7 @@ export function OverviewPage() {
     <div className="space-y-6 animate-fade-in-up">
       {/* Greeting */}
       <div>
-        <h1 className="text-2xl font-bold text-surface-100">
+        <h1 className="text-2xl font-semibold text-surface-100">
           Welcome back, <span className="gradient-text">{user?.name || 'User'}</span>
         </h1>
         <p className="text-sm text-surface-500 mt-1">
@@ -62,7 +62,7 @@ export function OverviewPage() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           icon={<Users size={28} />}
           label="Total Alumni"

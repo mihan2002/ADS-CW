@@ -31,9 +31,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar — fixed w-64 (256px) to match the ml-64 offset in DashboardLayout */}
       <aside
-        className={`fixed top-0 left-0 h-full w-[280px] bg-surface-900/95 backdrop-blur-xl border-r border-surface-800 z-50 transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 left-0 h-full w-64 bg-surface-900/95 backdrop-blur-xl border-r border-surface-800 z-50 transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

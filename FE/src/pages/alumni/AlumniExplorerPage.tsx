@@ -38,7 +38,7 @@ export function AlumniExplorerPage() {
     <div className="space-y-6 animate-fade-in-up">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-surface-100">
+          <h1 className="text-2xl font-semibold text-surface-100">
             <span className="gradient-text">Alumni Explorer</span>
           </h1>
           <p className="text-sm text-surface-500 mt-1">
@@ -105,7 +105,7 @@ export function AlumniExplorerPage() {
           description="Try adjusting your search criteria or filters."
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredAlumni.map((alumnus) => (
             <Card
               key={alumnus.user_id}
