@@ -19,13 +19,11 @@ const NAVIGATION: Navigation = [
     segment: "employees",
     title: "Alumni Explorer",
     icon: <PersonIcon />,
-    pattern: "employees{/:employeeId}*",
   },
   {
     segment: "bidding",
     title: "Bidding",
     icon: <GavelIcon />,
-    pattern: "bidding*",
   },
 ];
 

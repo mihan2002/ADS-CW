@@ -1,6 +1,7 @@
 import * as React from "react";
 import { clearTokens, getAccessToken, setTokens } from "../utils/tokenStorage";
 import { login as loginApi, verifyAccessToken } from "../services/api/auth";
+import { isDevBypassEnabled, setDevBypassEnabled } from "../utils/devMode";
 
 export interface AuthSessionUser {
   id: number;
@@ -15,6 +16,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => void;
   setUser: (user: AuthSessionUser | null) => void;
+  devSignIn: () => void;
 }
 
 const AuthContext = React.createContext<AuthContextType>({
@@ -23,6 +25,7 @@ const AuthContext = React.createContext<AuthContextType>({
   signIn: async () => {},
   signOut: () => {},
   setUser: () => {},
+  devSignIn: () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -30,6 +33,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = React.useState(true);
 
   const bootstrapAuth = React.useCallback(async () => {
+    if (isDevBypassEnabled()) {
+      setUser({
+        id: 999999,
+        name: "Dev User",
+        email: "dev@university.local",
+        role: "admin",
+      });
+      setLoading(false);
+      return;
+    }
+
     const accessToken = getAccessToken();
     if (!accessToken) {
       setLoading(false);
@@ -58,6 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = React.useCallback(async (email: string, password: string) => {
     const payload = await loginApi(email, password);
+    setDevBypassEnabled(false);
     setTokens(payload.accessToken, payload.refreshToken);
     setUser({
       id: payload.user.id,
@@ -68,8 +83,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = React.useCallback(() => {
+    setDevBypassEnabled(false);
     clearTokens();
     setUser(null);
+  }, []);
+
+  const devSignIn = React.useCallback(() => {
+    setDevBypassEnabled(true);
+    setUser({
+      id: 999999,
+      name: "Dev User",
+      email: "dev@university.local",
+      role: "admin",
+    });
   }, []);
 
   const value = React.useMemo(
@@ -79,8 +105,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signIn,
       signOut,
       setUser,
+      devSignIn,
     }),
-    [user, loading, signIn, signOut],
+    [user, loading, signIn, signOut, devSignIn],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

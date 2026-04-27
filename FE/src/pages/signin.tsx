@@ -5,7 +5,7 @@ import { Navigate, useNavigate, useSearchParams } from "react-router";
 import { useAuth } from "../context/AuthContext";
 
 export default function SignIn() {
-  const { user, loading, signIn } = useAuth();
+  const { user, loading, signIn, devSignIn } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [authError, setAuthError] = React.useState<string | null>(null);
@@ -43,6 +43,16 @@ export default function SignIn() {
         }}
       />
       <Stack direction="row" spacing={2} justifyContent="center">
+        <Link
+          component="button"
+          onClick={() => {
+            devSignIn();
+            const callbackUrl = searchParams.get("callbackUrl") || "/";
+            navigate(callbackUrl, { replace: true });
+          }}
+        >
+          Dev Sign-In (Bypass Auth)
+        </Link>
         <Link component="button" onClick={() => navigate("/register")}>
           Register
         </Link>
