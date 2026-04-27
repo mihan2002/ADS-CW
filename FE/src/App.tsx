@@ -1,37 +1,62 @@
-import { Routes, Route } from 'react-router';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { PrivateRoute } from '@/components/PrivateRoute';
-import { LoginPage } from '@/pages/auth/LoginPage';
-import { RegisterPage } from '@/pages/auth/RegisterPage';
-import { VerifyEmailPage } from '@/pages/auth/VerifyEmailPage';
-import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage';
-import { OverviewPage } from '@/pages/dashboard/OverviewPage';
-import { AnalyticsPage } from '@/pages/analytics/AnalyticsPage';
-import { AlumniExplorerPage } from '@/pages/alumni/AlumniExplorerPage';
-import { AlumniProfilePage } from '@/pages/alumni/AlumniProfilePage';
-import { BiddingPage } from '@/pages/bidding/BiddingPage';
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import GavelIcon from "@mui/icons-material/Gavel";
+import PersonIcon from "@mui/icons-material/Person";
+import { Outlet } from "react-router";
+import { ReactRouterAppProvider } from "@toolpad/core/react-router";
+import type { Authentication, Navigation } from "@toolpad/core/AppProvider";
+import { useAuth } from "./context/AuthContext";
 
-function App() {
+const NAVIGATION: Navigation = [
+  {
+    kind: "header",
+    title: "Main items",
+  },
+  {
+    title: "Dashboard",
+    icon: <DashboardIcon />,
+  },
+  {
+    segment: "employees",
+    title: "Alumni Explorer",
+    icon: <PersonIcon />,
+    pattern: "employees{/:employeeId}*",
+  },
+  {
+    segment: "bidding",
+    title: "Bidding",
+    icon: <GavelIcon />,
+    pattern: "bidding*",
+  },
+];
+
+const BRANDING = {
+  title: "University Analytics Dashboard",
+};
+
+export default function App() {
+  const { user, signOut } = useAuth();
+  const authentication: Authentication = {
+    signIn: () => {},
+    signOut: async () => signOut(),
+  };
+
   return (
-    <Routes>
-      {/* Public auth routes */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/verify-email" element={<VerifyEmailPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
-
-      {/* Protected dashboard routes */}
-      <Route element={<PrivateRoute />}>
-        <Route element={<DashboardLayout />}>
-          <Route index element={<OverviewPage />} />
-          <Route path="analytics" element={<AnalyticsPage />} />
-          <Route path="alumni" element={<AlumniExplorerPage />} />
-          <Route path="alumni/:userId" element={<AlumniProfilePage />} />
-          <Route path="bidding" element={<BiddingPage />} />
-        </Route>
-      </Route>
-    </Routes>
+    <ReactRouterAppProvider
+      navigation={NAVIGATION}
+      branding={BRANDING}
+      session={
+        user
+          ? {
+              user: {
+                name: user.name,
+                email: user.email,
+              },
+            }
+          : null
+      }
+      authentication={authentication}
+    >
+      <Outlet />
+    </ReactRouterAppProvider>
   );
 }
-
-export default App;
