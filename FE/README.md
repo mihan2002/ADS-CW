@@ -1,23 +1,30 @@
+# University Analytics Dashboard (Frontend)
 
-# Create Toolpad App
-
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-toolpad-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+Vite + React frontend for the coursework dashboard.
 
 ## Setup
 
-Run `npx auth secret` to generate a secret and replace the value in the .env.local file with it.
+1) Create a `.env` from the example:
 
-Add the CLIENT_ID and CLIENT_SECRET from your OAuth provider to the .env.local file.
+```bash
+cp .env.example .env
+```
 
-## Getting Started
+2) Install dependencies:
 
-First, run the development server: `npm run dev`
+```bash
+npm install
+```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3) Run the app:
 
+```bash
+npm run dev
+```
 
-## Deploy on Vercel
+Frontend will run on a Vite port (commonly `5173`). Ensure the backend is running and `VITE_API_BASE_URL` points to it.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Key Pages
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- **Dashboard**: analytics + exports\n+- **Graphs & Charts**: dedicated charts page\n+- **Alumni Explorer**: listing + required filters + saved filter presets\n+- **Bidding**: blind bidding with win/lose feedback
+

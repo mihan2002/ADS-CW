@@ -1,6 +1,8 @@
 import DashboardIcon from "@mui/icons-material/Dashboard";
+import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import GavelIcon from "@mui/icons-material/Gavel";
 import PersonIcon from "@mui/icons-material/Person";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { Outlet } from "react-router";
 import { ReactRouterAppProvider } from "@toolpad/core/react-router";
 import type { Authentication, Navigation } from "@toolpad/core/AppProvider";
@@ -16,9 +18,19 @@ const NAVIGATION: Navigation = [
     icon: <DashboardIcon />,
   },
   {
+    segment: "charts",
+    title: "Graphs & Charts",
+    icon: <QueryStatsIcon />,
+  },
+  {
     segment: "employees",
     title: "Alumni Explorer",
     icon: <PersonIcon />,
+  },
+  {
+    segment: "profile",
+    title: "My Profile",
+    icon: <AccountCircleIcon />,
   },
   {
     segment: "bidding",

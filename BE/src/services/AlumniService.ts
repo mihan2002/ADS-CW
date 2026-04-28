@@ -29,7 +29,7 @@ import type {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 /** Max number of times a user can win the featured-alumni slot per calendar month. */
-const MONTHLY_APPEARANCE_LIMIT = 1;
+const MONTHLY_APPEARANCE_LIMIT = 3;
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 function notFound(message: string): never {
@@ -49,6 +49,16 @@ function formatDate(d: Date): string {
 /** Return a Date set to midnight (00:00:00.000) in local time. */
 function midnight(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function tomorrowMidnight(): Date {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return midnight(d);
+}
+
+function todayMidnight(): Date {
+  return midnight(new Date());
 }
 
 async function assertUserExists(userId: number) {
@@ -97,6 +107,11 @@ export class AlumniService {
   static async createOrUpdateProfile(userId: number, dto: CreateOrUpdateProfileDto) {
     await assertUserExists(userId);
 
+    const profileData: Record<string, unknown> = {
+      ...dto,
+      graduation_date: dto.graduation_date ? new Date(dto.graduation_date) : undefined,
+    };
+
     const existing = await db
       .select()
       .from(alumniProfilesTable)
@@ -108,7 +123,7 @@ export class AlumniService {
     if (existing.length > 0) {
       await db
         .update(alumniProfilesTable)
-        .set({ ...dto, updated_at: now })
+        .set({ ...(profileData as any), updated_at: now })
         .where(eq(alumniProfilesTable.user_id, userId));
 
       const rows = await db
@@ -122,7 +137,7 @@ export class AlumniService {
 
     await db.insert(alumniProfilesTable).values({
       user_id: userId,
-      ...dto,
+      ...(profileData as any),
       created_at: now,
       updated_at: now,
     });
@@ -563,12 +578,46 @@ export class AlumniService {
   static async placeBid(userId: number, dto: PlaceBidDto) {
     await assertUserExists(userId);
 
+    // Enforce monthly win limit
+    const limit = await AlumniService.checkMonthlyLimit(userId);
+    if (limit.hasReachedLimit) {
+      const err = new Error(`Monthly limit reached (${limit.limit}). You cannot bid for featured alumni this month.`);
+      (err as any).statusCode = 409;
+      throw err;
+    }
+
+    // Only bid for tomorrow's slot
+    const targetDay = tomorrowMidnight();
+
+    // Slot must still be open (no winner selected yet)
+    const slotRows = await db.select().from(featureDaysTable).where(eq(featureDaysTable.day, targetDay)).limit(1);
+    const slot = slotRows[0] ?? null;
+    if (slot && slot.winner_user_id !== null) {
+      const err = new Error("Bidding is closed for tomorrow (winner already selected)");
+      (err as any).statusCode = 409;
+      throw err;
+    }
+
+    // One active pending bid per user per target day
+    const existingPending = await db
+      .select()
+      .from(bidsTable)
+      .where(and(eq(bidsTable.user_id, userId), eq(bidsTable.target_day, targetDay), eq(bidsTable.status, "pending")))
+      .orderBy(desc(bidsTable.created_at))
+      .limit(1);
+    if (existingPending.length > 0) {
+      const err = new Error("You already have a pending bid for tomorrow. Use update instead.");
+      (err as any).statusCode = 409;
+      throw err;
+    }
+
     const now = new Date();
 
     const created = await db
       .insert(bidsTable)
       .values({
         user_id: userId,
+        target_day: targetDay,
         amount: String(dto.amount),
         status: "pending",
         created_at: now,
@@ -608,6 +657,23 @@ export class AlumniService {
       throw err;
     }
 
+    // Only allow increasing bids
+    const currentAmount = Number(bid.amount);
+    if (!(dto.amount > currentAmount)) {
+      const err = new Error("Bid updates must increase the amount");
+      (err as any).statusCode = 409;
+      throw err;
+    }
+
+    // Cannot update once the feature slot has been assigned
+    const slotRows = await db.select().from(featureDaysTable).where(eq(featureDaysTable.day, bid.target_day)).limit(1);
+    const slot = slotRows[0] ?? null;
+    if (slot && slot.winner_user_id !== null) {
+      const err = new Error("Bidding is closed for this slot (winner already selected)");
+      (err as any).statusCode = 409;
+      throw err;
+    }
+
     await db
       .update(bidsTable)
       .set({ amount: String(dto.amount), updated_at: new Date() })
@@ -634,6 +700,19 @@ export class AlumniService {
     const bid = rows[0]!;
     if (bid.status === "cancelled") {
       const err = new Error("Bid is already cancelled");
+      (err as any).statusCode = 409;
+      throw err;
+    }
+    if (bid.status !== "pending") {
+      const err = new Error(`Cannot cancel a bid with status "${bid.status}"`);
+      (err as any).statusCode = 409;
+      throw err;
+    }
+
+    const slotRows = await db.select().from(featureDaysTable).where(eq(featureDaysTable.day, bid.target_day)).limit(1);
+    const slot = slotRows[0] ?? null;
+    if (slot && slot.winner_user_id !== null) {
+      const err = new Error("Bidding is closed for this slot (winner already selected)");
       (err as any).statusCode = 409;
       throw err;
     }
@@ -748,5 +827,77 @@ export class AlumniService {
       hasReachedLimit: monthlyCount >= MONTHLY_APPEARANCE_LIMIT,
       remainingSlots: Math.max(0, MONTHLY_APPEARANCE_LIMIT - monthlyCount),
     };
+  }
+
+  /**
+   * Selects a winner for the given feature day (default: today at midnight).
+   * - Picks highest pending bid for that day.\n+   * - Marks winning bid as \"won\" and others as \"lost\".\n+   * - Writes the feature_days winner_user_id and winning_bid_id.\n+   */
+  static async selectWinnerForDay(day: Date = todayMidnight()) {
+    const dayMidnight = midnight(day);
+
+    // If already selected, no-op
+    const existingSlot = await db.select().from(featureDaysTable).where(eq(featureDaysTable.day, dayMidnight)).limit(1);
+    if (existingSlot[0]?.winner_user_id) return { selected: false, reason: "already_selected" as const };
+
+    const pendingBids = await db
+      .select()
+      .from(bidsTable)
+      .where(and(eq(bidsTable.target_day, dayMidnight), eq(bidsTable.status, "pending")))
+      .orderBy(desc(bidsTable.amount), desc(bidsTable.created_at));
+
+    if (pendingBids.length === 0) {
+      return { selected: false, reason: "no_bids" as const };
+    }
+
+    // Filter out users who have hit the monthly win limit
+    const eligible: typeof pendingBids = [];
+    for (const bid of pendingBids) {
+      const limit = await AlumniService.checkMonthlyLimit(bid.user_id);
+      if (!limit.hasReachedLimit) eligible.push(bid);
+    }
+    if (eligible.length === 0) {
+      return { selected: false, reason: "no_eligible_bids" as const };
+    }
+
+    const winning = eligible[0]!;
+    const now = new Date();
+
+    // Create or update feature_days row
+    if (existingSlot.length === 0) {
+      await db.insert(featureDaysTable).values({
+        day: dayMidnight,
+        winner_user_id: winning.user_id,
+        winning_bid_id: winning.id,
+        selected_at: now,
+      });
+    } else {
+      await db
+        .update(featureDaysTable)
+        .set({ winner_user_id: winning.user_id, winning_bid_id: winning.id, selected_at: now })
+        .where(eq(featureDaysTable.id, existingSlot[0]!.id));
+    }
+
+    // Update bid statuses
+    await db.update(bidsTable).set({ status: "won", updated_at: now }).where(eq(bidsTable.id, winning.id));
+    await db
+      .update(bidsTable)
+      .set({ status: "lost", updated_at: now })
+      .where(and(eq(bidsTable.target_day, dayMidnight), eq(bidsTable.status, "pending")));
+
+    // Increment appearance count for the winner (all-time total)
+    const profileRows = await db
+      .select()
+      .from(alumniProfilesTable)
+      .where(eq(alumniProfilesTable.user_id, winning.user_id))
+      .limit(1);
+    if (profileRows.length > 0) {
+      const current = profileRows[0]!.appearance_count ?? 0;
+      await db
+        .update(alumniProfilesTable)
+        .set({ appearance_count: current + 1, updated_at: now })
+        .where(eq(alumniProfilesTable.user_id, winning.user_id));
+    }
+
+    return { selected: true, winnerUserId: winning.user_id, winningBidId: winning.id };
   }
 }

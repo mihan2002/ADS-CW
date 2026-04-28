@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { AlumniController, upload } from "../controllers/AlumniController.js";
+import { requireAuth, requireSelfOrRole } from "../middleware/auth.js";
 
 const router = Router();
+
+router.use(requireAuth);
 
 /**
  * @swagger
@@ -336,7 +339,7 @@ router.get("/slots/tomorrow", AlumniController.getTomorrowSlot);
  *       500:
  *         description: Server error
  */
-router.get("/:userId", AlumniController.getProfile);
+router.get("/:userId", requireSelfOrRole(["admin"]), AlumniController.getProfile);
 
 /**
  * @swagger
@@ -394,7 +397,7 @@ router.get("/:userId", AlumniController.getProfile);
  *       500:
  *         description: Server error
  */
-router.post("/:userId/profile", AlumniController.createOrUpdateProfile);
+router.post("/:userId/profile", requireSelfOrRole(["admin"]), AlumniController.createOrUpdateProfile);
 
 /**
  * @swagger
@@ -432,6 +435,7 @@ router.post("/:userId/profile", AlumniController.createOrUpdateProfile);
  */
 router.post(
 	"/:userId/profile-image",
+  requireSelfOrRole(["admin"]),
 	upload.single("profileImage"),
 	AlumniController.uploadProfileImage,
 );
@@ -471,7 +475,7 @@ router.post(
  *       500:
  *         description: Server error
  */
-router.delete("/:userId/profile", AlumniController.deleteProfile);
+router.delete("/:userId/profile", requireSelfOrRole(["admin"]), AlumniController.deleteProfile);
 
 // ====================
 // Degree Routes
@@ -521,7 +525,7 @@ router.delete("/:userId/profile", AlumniController.deleteProfile);
  *       500:
  *         description: Server error
  */
-router.post("/:userId/degrees", AlumniController.addDegree);
+router.post("/:userId/degrees", requireSelfOrRole(["admin"]), AlumniController.addDegree);
 
 /**
  * @swagger
@@ -568,7 +572,7 @@ router.post("/:userId/degrees", AlumniController.addDegree);
  *       500:
  *         description: Server error
  */
-router.put("/:userId/degrees/:degreeId", AlumniController.updateDegree);
+router.put("/:userId/degrees/:degreeId", requireSelfOrRole(["admin"]), AlumniController.updateDegree);
 
 /**
  * @swagger
@@ -599,7 +603,7 @@ router.put("/:userId/degrees/:degreeId", AlumniController.updateDegree);
  *       500:
  *         description: Server error
  */
-router.delete("/:userId/degrees/:degreeId", AlumniController.deleteDegree);
+router.delete("/:userId/degrees/:degreeId", requireSelfOrRole(["admin"]), AlumniController.deleteDegree);
 
 // ====================
 // Certification Routes
@@ -648,7 +652,7 @@ router.delete("/:userId/degrees/:degreeId", AlumniController.deleteDegree);
  *       500:
  *         description: Server error
  */
-router.post("/:userId/certifications", AlumniController.addCertification);
+router.post("/:userId/certifications", requireSelfOrRole(["admin"]), AlumniController.addCertification);
 
 /**
  * @swagger
@@ -697,6 +701,7 @@ router.post("/:userId/certifications", AlumniController.addCertification);
  */
 router.put(
 	"/:userId/certifications/:certId",
+  requireSelfOrRole(["admin"]),
 	AlumniController.updateCertification,
 );
 
@@ -731,6 +736,7 @@ router.put(
  */
 router.delete(
 	"/:userId/certifications/:certId",
+  requireSelfOrRole(["admin"]),
 	AlumniController.deleteCertification,
 );
 
@@ -781,7 +787,7 @@ router.delete(
  *       500:
  *         description: Server error
  */
-router.post("/:userId/licenses", AlumniController.addLicense);
+router.post("/:userId/licenses", requireSelfOrRole(["admin"]), AlumniController.addLicense);
 
 /**
  * @swagger
@@ -828,7 +834,7 @@ router.post("/:userId/licenses", AlumniController.addLicense);
  *       500:
  *         description: Server error
  */
-router.put("/:userId/licenses/:licenseId", AlumniController.updateLicense);
+router.put("/:userId/licenses/:licenseId", requireSelfOrRole(["admin"]), AlumniController.updateLicense);
 
 /**
  * @swagger
@@ -859,7 +865,7 @@ router.put("/:userId/licenses/:licenseId", AlumniController.updateLicense);
  *       500:
  *         description: Server error
  */
-router.delete("/:userId/licenses/:licenseId", AlumniController.deleteLicense);
+router.delete("/:userId/licenses/:licenseId", requireSelfOrRole(["admin"]), AlumniController.deleteLicense);
 
 // ====================
 // Professional Course Routes
@@ -908,7 +914,7 @@ router.delete("/:userId/licenses/:licenseId", AlumniController.deleteLicense);
  *       500:
  *         description: Server error
  */
-router.post("/:userId/courses", AlumniController.addProfessionalCourse);
+router.post("/:userId/courses", requireSelfOrRole(["admin"]), AlumniController.addProfessionalCourse);
 
 /**
  * @swagger
@@ -957,6 +963,7 @@ router.post("/:userId/courses", AlumniController.addProfessionalCourse);
  */
 router.put(
 	"/:userId/courses/:courseId",
+  requireSelfOrRole(["admin"]),
 	AlumniController.updateProfessionalCourse,
 );
 
@@ -991,6 +998,7 @@ router.put(
  */
 router.delete(
 	"/:userId/courses/:courseId",
+  requireSelfOrRole(["admin"]),
 	AlumniController.deleteProfessionalCourse,
 );
 
@@ -1047,7 +1055,7 @@ router.delete(
  *       500:
  *         description: Server error
  */
-router.post("/:userId/employment", AlumniController.addEmploymentHistory);
+router.post("/:userId/employment", requireSelfOrRole(["admin"]), AlumniController.addEmploymentHistory);
 
 /**
  * @swagger
@@ -1099,6 +1107,7 @@ router.post("/:userId/employment", AlumniController.addEmploymentHistory);
  */
 router.put(
 	"/:userId/employment/:employmentId",
+  requireSelfOrRole(["admin"]),
 	AlumniController.updateEmploymentHistory,
 );
 
@@ -1133,6 +1142,7 @@ router.put(
  */
 router.delete(
 	"/:userId/employment/:employmentId",
+  requireSelfOrRole(["admin"]),
 	AlumniController.deleteEmploymentHistory,
 );
 
@@ -1195,7 +1205,7 @@ router.delete(
  *       500:
  *         description: Server error
  */
-router.get("/:userId/bids", AlumniController.getBiddingHistory);
+router.get("/:userId/bids", requireSelfOrRole(["admin"]), AlumniController.getBiddingHistory);
 
 /**
  * @swagger
@@ -1251,7 +1261,7 @@ router.get("/:userId/bids", AlumniController.getBiddingHistory);
  *       500:
  *         description: Server error
  */
-router.get("/:userId/bids/status", AlumniController.getMyBidStatus);
+router.get("/:userId/bids/status", requireSelfOrRole(["admin"]), AlumniController.getMyBidStatus);
 
 /**
  * @swagger
@@ -1323,7 +1333,7 @@ router.get("/:userId/bids/status", AlumniController.getMyBidStatus);
  *       500:
  *         description: Server error
  */
-router.post("/:userId/bids", AlumniController.placeBid);
+router.post("/:userId/bids", requireSelfOrRole(["admin"]), AlumniController.placeBid);
 
 /**
  * @swagger
@@ -1371,7 +1381,7 @@ router.post("/:userId/bids", AlumniController.placeBid);
  *       500:
  *         description: Server error
  */
-router.put("/:userId/bids/:bidId", AlumniController.updateBid);
+router.put("/:userId/bids/:bidId", requireSelfOrRole(["admin"]), AlumniController.updateBid);
 
 /**
  * @swagger
@@ -1416,7 +1426,7 @@ router.put("/:userId/bids/:bidId", AlumniController.updateBid);
  *       500:
  *         description: Server error
  */
-router.patch("/:userId/bids/:bidId/cancel", AlumniController.cancelBid);
+router.patch("/:userId/bids/:bidId/cancel", requireSelfOrRole(["admin"]), AlumniController.cancelBid);
 
 // ====================
 // Slot & Limit Routes
@@ -1474,7 +1484,7 @@ router.patch("/:userId/bids/:bidId/cancel", AlumniController.cancelBid);
  *       500:
  *         description: Server error
  */
-router.get("/:userId/appearance-count", AlumniController.getMonthlyAppearanceCount);
+router.get("/:userId/appearance-count", requireSelfOrRole(["admin"]), AlumniController.getMonthlyAppearanceCount);
 
 /**
  * @swagger
@@ -1535,6 +1545,6 @@ router.get("/:userId/appearance-count", AlumniController.getMonthlyAppearanceCou
  *       500:
  *         description: Server error
  */
-router.get("/:userId/monthly-limit", AlumniController.checkMonthlyLimit);
+router.get("/:userId/monthly-limit", requireSelfOrRole(["admin"]), AlumniController.checkMonthlyLimit);
 
 export default router;

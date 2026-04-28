@@ -7,6 +7,7 @@ import {
   RequestPasswordResetDto,
   ResetPasswordDto,
   VerifyEmailDto,
+  ResendVerificationDto,
 } from "../dtos/auth.dto.js";
 
 export class AuthController {
@@ -134,17 +135,17 @@ export class AuthController {
    */
   static async resendVerification(req: Request, res: Response): Promise<void> {
     try {
-      const { email } = req.body;
-      if (!email || typeof email !== "string") {
-        res.status(400).json({ success: false, message: "Email is required" });
-        return;
-      }
-      await AuthService.resendEmailVerification(email);
+      const dto = ResendVerificationDto.parse(req.body);
+      await AuthService.resendEmailVerification(dto.email);
       res.status(200).json({
         success: true,
         message: "If your email exists and is unverified, a new verification code has been sent",
       });
     } catch (error) {
+      if (error instanceof ZodError) {
+        res.status(400).json({ success: false, message: "Validation error", errors: error.issues });
+        return;
+      }
       const status = (error as any).statusCode ?? 500;
       res.status(status).json({ success: false, message: (error as Error).message });
     }

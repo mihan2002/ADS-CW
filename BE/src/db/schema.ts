@@ -1,4 +1,3 @@
-import { create } from "domain";
 import {
   int,
   mysqlTable,
@@ -48,6 +47,45 @@ export const passwordResetTokensTable = mysqlTable("password_reset_tokens", {
   created_at: timestamp().notNull(),
 });
 
+export const apiClientsTable = mysqlTable("api_clients", {
+  id: serial().primaryKey(),
+  name: varchar({ length: 255 }).notNull(),
+  created_at: timestamp().notNull(),
+  revoked_at: timestamp(),
+});
+
+export const apiKeysTable = mysqlTable("api_keys", {
+  id: serial().primaryKey(),
+  client_id: int()
+    .notNull()
+    .references(() => apiClientsTable.id, { onDelete: "cascade" }),
+  key_prefix: varchar({ length: 32 }).notNull(),
+  key_hash: varchar({ length: 255 }).notNull().unique(),
+  created_at: timestamp().notNull(),
+  last_used_at: timestamp(),
+  revoked_at: timestamp(),
+});
+
+export const apiKeyPermissionsTable = mysqlTable("api_key_permissions", {
+  id: serial().primaryKey(),
+  api_key_id: int()
+    .notNull()
+    .references(() => apiKeysTable.id, { onDelete: "cascade" }),
+  permission: varchar({ length: 64 }).notNull(),
+  created_at: timestamp().notNull(),
+});
+
+export const apiKeyUsageTable = mysqlTable("api_key_usage", {
+  id: serial().primaryKey(),
+  api_key_id: int()
+    .notNull()
+    .references(() => apiKeysTable.id, { onDelete: "cascade" }),
+  endpoint: varchar({ length: 255 }).notNull(),
+  method: varchar({ length: 16 }).notNull(),
+  status_code: int().notNull(),
+  used_at: timestamp().notNull(),
+});
+
 export const alumniProfilesTable = mysqlTable("alumni_profiles", {
   user_id: int()
     .notNull()
@@ -55,8 +93,12 @@ export const alumniProfilesTable = mysqlTable("alumni_profiles", {
   first_name: varchar({ length: 255 }).notNull(),
   last_name: varchar({ length: 255 }).notNull(),
   bio: varchar({ length: 1000 }),
+  programme: varchar({ length: 255 }),
   graduation_year: int(),
+  graduation_date: date(),
   degree: varchar({ length: 255 }),
+  industry_sector: varchar({ length: 255 }),
+  geography: varchar({ length: 255 }),
   current_position: varchar({ length: 255 }),
   linkedin_url: varchar({ length: 255 }),
   profile_image_id: int(),
@@ -164,6 +206,7 @@ export const bidsTable = mysqlTable("bids", {
   user_id: int()
     .notNull()
     .references(() => usersTable.id),
+  target_day: date().notNull(),
   amount: decimal().notNull(),
   status: varchar({ length: 255 }).notNull(),
   created_at: timestamp().notNull(),

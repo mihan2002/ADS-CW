@@ -1,96 +1,55 @@
-# MVC Project
+# University Analytics Dashboard (Backend)
 
-A TypeScript-based MVC (Model-View-Controller) application built with Express.js.
+Express + TypeScript backend for the coursework, using Drizzle ORM with MySQL.
 
-## Project Structure
+## Setup
 
-```
-src/
-├── controllers/     # Business logic and request handlers
-├── models/          # Data models and database logic
-├── routes/          # API route definitions
-├── middleware/      # Custom middleware functions
-├── views/           # HTML templates and static views
-├── utils/           # Utility functions
-├── app.ts           # Express app configuration
-└── index.ts         # Server entry point
+1) Create a `.env` from the example:
 
-dist/               # Compiled JavaScript files
+```bash
+cp .env.example .env
 ```
 
-## Installation
-
-1. Install dependencies:
+2) Install dependencies:
 
 ```bash
 npm install
 ```
 
-2. Build TypeScript:
+3) Ensure the database schema is applied (see `drizzle/`).
 
-```bash
-npm run build
-```
-
-## Development
-
-Run the development server with auto-reload:
+4) Run in dev:
 
 ```bash
 npm run dev
 ```
 
-## Production
-
-Build and start:
+or build + start:
 
 ```bash
 npm run build
 npm start
 ```
 
-## API Endpoints
+## Security Model (summary)
 
-### Users
+- **User auth**: JWT bearer tokens (access + refresh).\n+- **Authorization**: protected routes validate bearer tokens and block IDOR access via `userId` params.\n+- **API keys (client access)**: `/api/client/*` endpoints require an API key with scoped permissions and log usage.
 
-- **GET** `/api/users` - Get all users
-- **GET** `/api/users/:id` - Get user by ID
-- **POST** `/api/users` - Create new user
-  - Body: `{ "name": "John", "email": "john@example.com" }`
-- **PUT** `/api/users/:id` - Update user
-  - Body: `{ "name": "John", "email": "john@example.com" }`
-- **DELETE** `/api/users/:id` - Delete user
+## Key Endpoints
 
-## Technologies
+### Auth
+- `POST /api/auth/login`\n+- `POST /api/auth/refresh`\n+- `GET /api/auth/verify`\n+- `POST /api/auth/request-password-reset`\n+- `POST /api/auth/reset-password`\n+- `POST /api/auth/verify-email`\n+- `POST /api/auth/resend-verification`
 
-- **TypeScript** - Type-safe JavaScript
-- **Express.js** - Web framework
-- **Node.js** - Runtime environment
+### Alumni (JWT required)
+- `GET /api/alumni`\n+- `GET /api/alumni/:userId`\n+- `POST /api/alumni/:userId/profile`\n+- `POST /api/alumni/:userId/bids` (bids for tomorrow’s slot)\n+- `PUT /api/alumni/:userId/bids/:bidId` (must increase)\n+- `PATCH /api/alumni/:userId/bids/:bidId/cancel`
 
-## Architecture
+### API Keys (admin only)
+- `GET /api/api-keys` (list)\n+- `POST /api/api-keys` (create)\n+- `DELETE /api/api-keys/:apiKeyId` (revoke)\n+- `GET /api/api-keys/csrf` (issues CSRF token cookie + response token for key-management actions)
 
-This project follows the MVC pattern:
+### Client API (API key required)
+- `GET /api/client/alumni` requires `read:alumni`\n+- `GET /api/client/analytics` requires `read:analytics`\n+- `GET /api/client/alumni-of-day` requires `read:alumni_of_day`
 
-- **Model** - `User` class handles data and business logic
-- **View** - HTML and JSON responses
-- **Controller** - `UserController` handles requests and responses
+## API Documentation
 
-## Scripts
+Swagger UI is available at `GET /api-docs`.
 
-- `npm run dev` - Start development server (ts-node)
-- `npm run build` - Compile TypeScript to JavaScript
-- `npm start` - Run production server
-- `npm test` - Run tests (not configured)
-
-## Environment Variables
-
-Create a `.env` file for environment-specific configuration:
-
-```
-PORT=3000
-NODE_ENV=development
-```
-
-## License
-
-ISC

@@ -26,7 +26,11 @@ export interface AlumniProfile {
   last_name: string;
   bio: string | null;
   graduation_year: number | null;
+  graduation_date?: string | null;
   degree: string | null;
+  programme?: string | null;
+  industry_sector?: string | null;
+  geography?: string | null;
   current_position: string | null;
   linkedin_url: string | null;
   appearance_count: number;
@@ -73,6 +77,7 @@ export interface AlumniFullProfile {
 export interface BidRecord {
   id: number;
   user_id: number;
+  target_day?: string;
   amount: string;
   status: string;
   created_at: string;

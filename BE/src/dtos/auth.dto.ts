@@ -33,3 +33,9 @@ export const VerifyEmailDto = z.object({
   token: z.string().length(6, "Token must be exactly 6 digits").regex(/^\d{6}$/, "Token must be a 6-digit number"),
 });
 export type VerifyEmailDto = z.infer<typeof VerifyEmailDto>;
+
+// ─── Resend Verification ───────────────────────────────────────────────────────
+export const ResendVerificationDto = z.object({
+  email: z.email("Invalid email address"),
+});
+export type ResendVerificationDto = z.infer<typeof ResendVerificationDto>;

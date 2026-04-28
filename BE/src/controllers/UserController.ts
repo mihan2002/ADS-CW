@@ -8,6 +8,13 @@ function parseIntId(raw: string): number | null {
   return Number.isInteger(id) && id > 0 ? id : null;
 }
 
+function stripPasswordHash(user: any) {
+  if (!user) return user;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { password_hash: _passwordHash, ...safe } = user;
+  return safe;
+}
+
 export class UserController {
   static async getAll(_req: Request, res: Response): Promise<void> {
     try {
@@ -19,6 +26,21 @@ export class UserController {
     }
   }
 
+  static async getMe(req: Request, res: Response): Promise<void> {
+    try {
+      if (!req.auth) {
+        res.status(401).json({ success: false, message: "Unauthorized" });
+        return;
+      }
+
+      const user = await UserService.getById(req.auth.userId);
+      res.status(200).json({ success: true, data: stripPasswordHash(user), message: "User retrieved successfully" });
+    } catch (error) {
+      const status = (error as any).statusCode ?? 500;
+      res.status(status).json({ success: false, message: (error as Error).message });
+    }
+  }
+
   static async getById(req: Request, res: Response): Promise<void> {
     try {
       const id = parseIntId(req.params.id!);
@@ -27,7 +49,7 @@ export class UserController {
         return;
       }
       const user = await UserService.getById(id);
-      res.status(200).json({ success: true, data: user, message: "User retrieved successfully" });
+      res.status(200).json({ success: true, data: stripPasswordHash(user), message: "User retrieved successfully" });
     } catch (error) {
       const status = (error as any).statusCode ?? 500;
       res.status(status).json({ success: false, message: (error as Error).message });

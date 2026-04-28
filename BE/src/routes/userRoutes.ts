@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { UserController } from '../controllers/UserController.js';
+import { requireAuth, requireRole, requireSelfOrRole } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -69,10 +70,12 @@ const router = Router();
  *         email:
  *           type: string
  *           format: email
- *           example: john@example.com
+ *           description: Must be a university email address
+ *           example: john.doe@university.edu
  *         password:
  *           type: string
- *           example: password123
+ *           description: Must contain an uppercase letter
+ *           example: Password123!
  *         role:
  *           type: string
  *           enum: [user, admin, moderator]
@@ -135,6 +138,42 @@ const router = Router();
  *           type: boolean
  *         message:
  *           type: string
+ *
+ *     ValidationError:
+ *       type: object
+ *       properties:
+ *         code:
+ *           type: string
+ *           example: custom
+ *         path:
+ *           type: array
+ *           items:
+ *             type: string
+ *           example: ["email"]
+ *         message:
+ *           type: string
+ *           example: Email must be a university email address
+ *
+ *     ValidationErrorResponse:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *           example: false
+ *         message:
+ *           type: string
+ *           example: Validation error
+ *         errors:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/ValidationError'
+ *           example:
+ *             - code: custom
+ *               path: ["email"]
+ *               message: Email must be a university email address
+ *             - code: custom
+ *               path: ["password"]
+ *               message: Password must contain an uppercase letter
  */
 
 /**
@@ -157,6 +196,15 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/ApiResponseMessage'
  */
+// Registration remains public
+router.post('/', UserController.create);
+
+// Current user profile (authenticated)
+router.get("/me", requireAuth, UserController.getMe);
+
+// Protect user management endpoints
+router.use(requireAuth, requireRole(["admin"]));
+
 router.get('/', UserController.getAll);
 
 /**
@@ -198,7 +246,7 @@ router.get('/', UserController.getAll);
  *             schema:
  *               $ref: '#/components/schemas/ApiResponseMessage'
  */
-router.get('/:id', UserController.getById);
+router.get('/:id', requireAuth, requireSelfOrRole(["admin"]), UserController.getById);
 
 /**
  * @swagger
@@ -220,11 +268,11 @@ router.get('/:id', UserController.getById);
  *             schema:
  *               $ref: '#/components/schemas/ApiResponseUser'
  *       400:
- *         description: Missing required fields or invalid age
+ *         description: Validation error - invalid email or password format
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ApiResponseMessage'
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
  *       500:
  *         description: Failed to create user
  *         content:
@@ -232,8 +280,6 @@ router.get('/:id', UserController.getById);
  *             schema:
  *               $ref: '#/components/schemas/ApiResponseMessage'
  */
-router.post('/', UserController.create);
-
 /**
  * @swagger
  * /api/users/{id}:

@@ -6,8 +6,10 @@ import { AuthProvider } from "./context/AuthContext";
 import Layout from "./layouts/dashboard";
 import BiddingPage from "./pages/bidding";
 import DashboardPage from "./pages";
+import ChartsPage from "./pages/charts";
 import EmployeesCrudPage from "./pages/employees";
 import ForgotPasswordPage from "./pages/forgot-password";
+import ProfilePage from "./pages/profile";
 import RegisterPage from "./pages/register";
 import ResetPasswordPage from "./pages/reset-password";
 import SignInPage from "./pages/signin";
@@ -30,8 +32,16 @@ const router = createBrowserRouter([
             Component: EmployeesCrudPage,
           },
           {
+            path: "charts",
+            Component: ChartsPage,
+          },
+          {
             path: "bidding",
             Component: BiddingPage,
+          },
+          {
+            path: "profile",
+            Component: ProfilePage,
           },
         ],
       },

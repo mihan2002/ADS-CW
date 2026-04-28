@@ -144,7 +144,7 @@ export class AuthService {
 
     const user = users[0]!;
 
-    const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
+    const resetToken = crypto.randomInt(100000, 1000000).toString(); // 6-digit
     const tokenHash = await bcrypt.hash(resetToken, 10);
 
     const expiresAt = new Date();
@@ -213,7 +213,12 @@ export class AuthService {
     const resetTokens = await db
       .select()
       .from(passwordResetTokensTable)
-      .where(eq(passwordResetTokensTable.user_id, user.id));
+      .where(
+        and(
+          eq(passwordResetTokensTable.user_id, user.id),
+          eq(passwordResetTokensTable.used_at, null as any),
+        ),
+      );
 
     if (resetTokens.length === 0) {
       const err = new Error("Invalid or expired reset token");
@@ -293,7 +298,7 @@ export class AuthService {
       .delete(emailVerificationTokensTable)
       .where(eq(emailVerificationTokensTable.user_id, userId));
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit
+    const otp = crypto.randomInt(100000, 1000000).toString(); // 6-digit
     const tokenHash = await bcrypt.hash(otp, 10);
 
     const expiresAt = new Date();

@@ -1,9 +1,15 @@
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key-change-this';
-const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '30d';
+function requireEnv(name: string): string {
+  const v = process.env[name];
+  if (!v) throw new Error(`${name} is not configured`);
+  return v;
+}
+
+const JWT_SECRET = requireEnv("JWT_SECRET");
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "15m";
+const JWT_REFRESH_SECRET = requireEnv("JWT_REFRESH_SECRET");
+const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || "7d";
 
 export interface JWTPayload {
   userId: number;

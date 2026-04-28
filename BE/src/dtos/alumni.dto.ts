@@ -5,13 +5,17 @@ export const CreateOrUpdateProfileDto = z.object({
   first_name: z.string().min(1, "First name is required"),
   last_name: z.string().min(1, "Last name is required"),
   bio: z.string().optional(),
+  programme: z.string().optional(),
   graduation_year: z
     .number()
     .int()
     .min(1900)
     .max(new Date().getFullYear() + 10)
     .optional(),
+  graduation_date: z.string().date().optional(),
   degree: z.string().optional(),
+  industry_sector: z.string().optional(),
+  geography: z.string().optional(),
   current_position: z.string().optional(),
   linkedin_url: z.string().url("Invalid LinkedIn URL").optional().or(z.literal("")),
 });
