@@ -1,10 +1,13 @@
 import * as React from "react";
 import { PageContainer } from "@toolpad/core/PageContainer";
 import { Alert, Card, CardContent, Chip, Grid, LinearProgress, Stack, Typography } from "@mui/material";
+import axios from "axios";
+import { Navigate, useLocation, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { isDevBypassEnabled } from "../utils/devMode";
 import { getUserById } from "../services/api/users";
 import type { AuthUser } from "../types/api";
+import { getAccessToken } from "../utils/tokenStorage";
 
 function formatDate(value: string | null | undefined) {
   if (!value) return "-";
@@ -15,6 +18,8 @@ function formatDate(value: string | null | undefined) {
 
 export default function ProfilePage() {
   const { user: sessionUser } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [me, setMe] = React.useState<AuthUser | null>(null);
@@ -37,6 +42,21 @@ export default function ProfilePage() {
         return;
       }
 
+      const token = getAccessToken();
+      console.debug("[profile] load", {
+        userId: sessionUser.id,
+        hasToken: Boolean(token),
+        path: location.pathname + location.search,
+      });
+
+      if (!token) {
+        // Prevent calls when unauthenticated; let auth flow handle it.
+        setLoading(false);
+        setMe(null);
+        navigate(`/sign-in?callbackUrl=${encodeURIComponent(location.pathname + location.search)}`, { replace: true });
+        return;
+      }
+
       try {
         setLoading(true);
         const data = await getUserById(sessionUser.id);
@@ -44,6 +64,19 @@ export default function ProfilePage() {
         setMe(data);
       } catch (err) {
         if (!alive) return;
+        if (axios.isAxiosError(err)) {
+          const status = err.response?.status;
+          if (status === 401) {
+            navigate(`/sign-in?callbackUrl=${encodeURIComponent(location.pathname + location.search)}`, { replace: true });
+            return;
+          }
+          if (status === 403) {
+            setError("You do not have permission to access this resource");
+            return;
+          }
+          setError(err.message || "Failed to load profile");
+          return;
+        }
         setError(err instanceof Error ? err.message : "Failed to load profile");
       } finally {
         if (alive) setLoading(false);
@@ -59,6 +92,11 @@ export default function ProfilePage() {
   const name = me?.name ?? sessionUser?.name ?? "-";
   const email = me?.email ?? sessionUser?.email ?? "-";
   const role = me?.role ?? sessionUser?.role ?? "-";
+
+  if (!isDevBypassEnabled() && !sessionUser) {
+    const redirectTo = `/sign-in?callbackUrl=${encodeURIComponent(location.pathname + location.search)}`;
+    return <Navigate to={redirectTo} replace />;
+  }
 
   return (
     <PageContainer title="My Profile">

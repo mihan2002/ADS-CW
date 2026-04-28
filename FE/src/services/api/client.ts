@@ -20,8 +20,16 @@ function flushQueue(newToken: string | null) {
 
 apiClient.interceptors.request.use((config) => {
   const accessToken = getAccessToken();
+  const url = `${config.baseURL ?? ""}${config.url ?? ""}`;
+  const method = String(config.method || "get").toUpperCase();
+
+  // Debug logs (do not log the token value)
+  console.debug("[api] request", { method, url, hasToken: Boolean(accessToken) });
+
   if (accessToken) {
-    config.headers.Authorization = `Bearer ${accessToken}`;
+    config.headers = config.headers ?? {};
+    // Ensure Authorization is always attached when token exists
+    (config.headers as any).Authorization = `Bearer ${accessToken}`;
   }
   return config;
 });
@@ -30,6 +38,15 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as RetriableRequest | undefined;
+    const status = error.response?.status;
+    console.debug("[api] response error", {
+      status,
+      url: originalRequest?.url,
+      method: originalRequest?.method,
+      message: error.message,
+      data: error.response?.data,
+    });
+
     if (!originalRequest || originalRequest._retry || error.response?.status !== 401) {
       throw error;
     }
