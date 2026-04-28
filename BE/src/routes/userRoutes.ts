@@ -58,7 +58,7 @@ const router = Router();
  *         - name
  *         - age
  *         - email
- *         - password_hash
+ *         - password
  *       properties:
  *         name:
  *           type: string
@@ -70,9 +70,9 @@ const router = Router();
  *           type: string
  *           format: email
  *           example: john@example.com
- *         password_hash:
+ *         password:
  *           type: string
- *           example: $2b$10$examplehash
+ *           example: password123
  *         role:
  *           type: string
  *           enum: [user, admin, moderator]

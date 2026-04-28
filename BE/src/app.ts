@@ -1,5 +1,6 @@
 import express from 'express';
 import type { Express } from 'express';
+import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger.js';
 import userRoutes from './routes/userRoutes.js';
@@ -8,6 +9,14 @@ import alumniRoutes from './routes/alumniRoutes.js';
 import { ErrorHandler } from './middleware/errorHandler.js';
 
 const app: Express = express();
+
+// CORS configuration
+app.use(cors({
+  origin: process.env.FRONTEND_URL,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 // Middleware
 app.use(express.json());
