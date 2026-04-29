@@ -22,10 +22,23 @@ const options = {
         description: 'Development server (alternate)',
       },
     ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
     tags: [
       {
         name: 'Users',
         description: 'User management endpoints',
+      },
+      {
+        name: 'API Keys',
+        description: 'API key management endpoints (Admin only)',
       },
     ],
   },
