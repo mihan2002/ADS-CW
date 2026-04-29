@@ -26,6 +26,7 @@ import type {
   PlaceBidDto,
   UpdateBidDto,
 } from "../dtos/alumni.dto.js";
+import { sanitizeInput } from "../utils/sanitize.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 /** Max number of times a user can win the featured-alumni slot per calendar month. */
@@ -107,9 +108,19 @@ export class AlumniService {
   static async createOrUpdateProfile(userId: number, dto: CreateOrUpdateProfileDto) {
     await assertUserExists(userId);
 
+    // SECURITY: Sanitize user-generated text fields to prevent XSS
     const profileData: Record<string, unknown> = {
-      ...dto,
+      first_name: sanitizeInput(dto.first_name),
+      last_name: sanitizeInput(dto.last_name),
+      bio: sanitizeInput(dto.bio),
+      programme: sanitizeInput(dto.programme),
+      graduation_year: dto.graduation_year,
       graduation_date: dto.graduation_date ? new Date(dto.graduation_date) : undefined,
+      degree: sanitizeInput(dto.degree),
+      industry_sector: sanitizeInput(dto.industry_sector),
+      geography: sanitizeInput(dto.geography),
+      current_position: sanitizeInput(dto.current_position),
+      linkedin_url: dto.linkedin_url, // URLs are validated by Zod, no need to sanitize
     };
 
     const existing = await db
@@ -188,8 +199,8 @@ export class AlumniService {
       .insert(degreesTable)
       .values({
         user_id: userId,
-        title: dto.title,
-        institution_name: dto.institution_name,
+        title: sanitizeInput(dto.title),
+        institution_name: sanitizeInput(dto.institution_name),
         official_url: dto.official_url,
         completed_on: dto.completed_on ? new Date(dto.completed_on) : null,
         created_at: now,
@@ -226,8 +237,8 @@ export class AlumniService {
     await db
       .update(degreesTable)
       .set({
-        title: dto.title ?? existing.title,
-        institution_name: dto.institution_name ?? existing.institution_name,
+        title: dto.title ? sanitizeInput(dto.title) : existing.title,
+        institution_name: dto.institution_name ? sanitizeInput(dto.institution_name) : existing.institution_name,
         official_url: dto.official_url !== undefined ? dto.official_url : existing.official_url,
         completed_on: dto.completed_on ? new Date(dto.completed_on) : existing.completed_on,
       })
@@ -262,8 +273,8 @@ export class AlumniService {
       .insert(certificationsTable)
       .values({
         user_id: userId,
-        name: dto.name,
-        provider: dto.provider,
+        name: sanitizeInput(dto.name),
+        provider: sanitizeInput(dto.provider),
         course_url: dto.course_url,
         completed_on: dto.completed_on ? new Date(dto.completed_on) : null,
         created_at: now,
@@ -300,8 +311,8 @@ export class AlumniService {
     await db
       .update(certificationsTable)
       .set({
-        name: dto.name ?? existing.name,
-        provider: dto.provider ?? existing.provider,
+        name: dto.name ? sanitizeInput(dto.name) : existing.name,
+        provider: dto.provider ? sanitizeInput(dto.provider) : existing.provider,
         course_url: dto.course_url !== undefined ? dto.course_url : existing.course_url,
         completed_on: dto.completed_on ? new Date(dto.completed_on) : existing.completed_on,
       })
@@ -336,8 +347,8 @@ export class AlumniService {
       .insert(licensesTable)
       .values({
         user_id: userId,
-        name: dto.name,
-        awarding_body: dto.awarding_body,
+        name: sanitizeInput(dto.name),
+        awarding_body: sanitizeInput(dto.awarding_body),
         license_url: dto.license_url,
         completed_on: dto.completed_on ? new Date(dto.completed_on) : null,
         created_at: now,
@@ -374,8 +385,8 @@ export class AlumniService {
     await db
       .update(licensesTable)
       .set({
-        name: dto.name ?? existing.name,
-        awarding_body: dto.awarding_body ?? existing.awarding_body,
+        name: dto.name ? sanitizeInput(dto.name) : existing.name,
+        awarding_body: dto.awarding_body ? sanitizeInput(dto.awarding_body) : existing.awarding_body,
         license_url: dto.license_url !== undefined ? dto.license_url : existing.license_url,
         completed_on: dto.completed_on ? new Date(dto.completed_on) : existing.completed_on,
       })
@@ -410,8 +421,8 @@ export class AlumniService {
       .insert(professionalCoursesTable)
       .values({
         user_id: userId,
-        title: dto.title,
-        provider: dto.provider,
+        title: sanitizeInput(dto.title),
+        provider: sanitizeInput(dto.provider),
         course_url: dto.course_url,
         completed_on: dto.completed_on ? new Date(dto.completed_on) : null,
         created_at: now,
@@ -448,8 +459,8 @@ export class AlumniService {
     await db
       .update(professionalCoursesTable)
       .set({
-        title: dto.title ?? existing.title,
-        provider: dto.provider ?? existing.provider,
+        title: dto.title ? sanitizeInput(dto.title) : existing.title,
+        provider: dto.provider ? sanitizeInput(dto.provider) : existing.provider,
         course_url: dto.course_url !== undefined ? dto.course_url : existing.course_url,
         completed_on: dto.completed_on ? new Date(dto.completed_on) : existing.completed_on,
       })
@@ -484,11 +495,11 @@ export class AlumniService {
       .insert(employmentHistoryTable)
       .values({
         user_id: userId,
-        company: dto.company,
-        job_title: dto.job_title,
+        company: sanitizeInput(dto.company),
+        job_title: sanitizeInput(dto.job_title),
         start_date: new Date(dto.start_date),
         end_date: dto.end_date ? new Date(dto.end_date) : null,
-        description: dto.description,
+        description: sanitizeInput(dto.description),
         created_at: now,
         updated_at: now,
       })
@@ -534,8 +545,8 @@ export class AlumniService {
     await db
       .update(employmentHistoryTable)
       .set({
-        company: dto.company ?? existing.company,
-        job_title: dto.job_title ?? existing.job_title,
+        company: dto.company ? sanitizeInput(dto.company) : existing.company,
+        job_title: dto.job_title ? sanitizeInput(dto.job_title) : existing.job_title,
         start_date: dto.start_date ? new Date(dto.start_date) : existing.start_date,
         end_date:
           dto.end_date !== undefined
@@ -543,7 +554,7 @@ export class AlumniService {
               ? null
               : new Date(dto.end_date)
             : existing.end_date,
-        description: dto.description !== undefined ? dto.description : existing.description,
+        description: dto.description !== undefined ? sanitizeInput(dto.description) : existing.description,
         updated_at: now,
       })
       .where(eq(employmentHistoryTable.id, employmentId));

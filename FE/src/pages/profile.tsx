@@ -8,6 +8,7 @@ import { isDevBypassEnabled } from "../utils/devMode";
 import { getUserById } from "../services/api/users";
 import type { AuthUser } from "../types/api";
 import { getAccessToken } from "../utils/tokenStorage";
+import { getErrorMessage } from "../utils/errorHandler";
 
 function formatDate(value: string | null | undefined) {
   if (!value) return "-";
@@ -70,14 +71,8 @@ export default function ProfilePage() {
             navigate(`/sign-in?callbackUrl=${encodeURIComponent(location.pathname + location.search)}`, { replace: true });
             return;
           }
-          if (status === 403) {
-            setError("You do not have permission to access this resource");
-            return;
-          }
-          setError(err.message || "Failed to load profile");
-          return;
         }
-        setError(err instanceof Error ? err.message : "Failed to load profile");
+        setError(getErrorMessage(err));
       } finally {
         if (alive) setLoading(false);
       }

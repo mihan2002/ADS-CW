@@ -1,5 +1,6 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { clearTokens, getAccessToken, getRefreshToken, setTokens } from "../../utils/tokenStorage";
+import { ForbiddenError } from "../../utils/errorHandler";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ;
 
@@ -46,6 +47,11 @@ apiClient.interceptors.response.use(
       message: error.message,
       data: error.response?.data,
     });
+
+    // Handle 403 Forbidden errors
+    if (status === 403) {
+      throw new ForbiddenError();
+    }
 
     if (!originalRequest || originalRequest._retry || error.response?.status !== 401) {
       throw error;

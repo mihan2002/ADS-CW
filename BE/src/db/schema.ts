@@ -6,12 +6,13 @@ import {
   timestamp,
   decimal,
   date,
+  index,
 } from "drizzle-orm/mysql-core";
 
 export const usersTable = mysqlTable("users", {
   id: serial().primaryKey(),
   name: varchar({ length: 255 }).notNull(),
-  age: int().notNull(),
+  age: int(),
   email: varchar({ length: 255 }).notNull().unique(),
   password_hash: varchar({ length: 255 }).notNull(),
   role: varchar({ length: 50 }).notNull().default('user'),
@@ -199,7 +200,10 @@ export const featureDaysTable = mysqlTable("feature_days", {
   winner_user_id: int().references(() => usersTable.id),
   winning_bid_id: int().references(() => bidsTable.id),
   selected_at: timestamp(),
-});
+}, (table) => ({
+  // Index for querying feature days by date
+  dayIdx: index("day_idx").on(table.day),
+}));
 
 export const bidsTable = mysqlTable("bids", {
   id: serial().primaryKey(),
@@ -211,7 +215,11 @@ export const bidsTable = mysqlTable("bids", {
   status: varchar({ length: 255 }).notNull(),
   created_at: timestamp().notNull(),
   updated_at: timestamp().notNull(),
-});
+}, (table) => ({
+  // Indexes for efficient bidding queries
+  targetDayIdx: index("target_day_idx").on(table.target_day),
+  statusIdx: index("status_idx").on(table.status),
+}));
 
 export const alumniEventParticipationTable = mysqlTable(
   "alumni_event_participation",

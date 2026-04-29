@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { UserController } from '../controllers/UserController.js';
 import { requireAuth, requireRole, requireSelfOrRole } from "../middleware/auth.js";
+import { csrfProtection } from "../middleware/csrf.js";
 
 const router = Router();
 
@@ -325,7 +326,7 @@ router.get('/:id', requireAuth, requireSelfOrRole(["admin"]), UserController.get
  *             schema:
  *               $ref: '#/components/schemas/ApiResponseMessage'
  */
-router.put('/:id', UserController.update);
+router.put('/:id', csrfProtection, UserController.update);
 
 /**
  * @swagger
@@ -366,6 +367,6 @@ router.put('/:id', UserController.update);
  *             schema:
  *               $ref: '#/components/schemas/ApiResponseMessage'
  */
-router.delete('/:id', UserController.delete);
+router.delete('/:id', csrfProtection, UserController.delete);
 
 export default router;

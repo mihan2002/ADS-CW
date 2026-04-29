@@ -22,6 +22,8 @@ import {
   YAxis,
 } from "recharts";
 import { useDashboardData } from "../hooks/useDashboardData";
+import { useFilters } from "../context/FilterContext";
+import { FilterControls } from "../components/FilterControls";
 import {
   employmentTrends,
   groupByDegree,
@@ -37,21 +39,28 @@ const CHART_COLORS = ["#3f51b5", "#00bcd4", "#8bc34a", "#ff9800", "#e91e63", "#9
 
 export default function ChartsPage() {
   const { profiles, details, loading, error } = useDashboardData();
+  const { applyFiltersToProfiles, applyFiltersToDetails } = useFilters();
 
-  const gradYearData = groupByGraduationYear(profiles);
-  const degreeData = groupByDegree(profiles);
-  const employmentData = employmentTrends(details);
-  const jobTitleData = topJobTitles(details);
-  const employerData = topEmployers(details);
-  const industryData = groupByIndustrySector(profiles);
-  const geoData = groupByGeography(profiles);
-  const skillGapData = skillsGapRadar(details);
+  // Apply filters to data
+  const filteredProfiles = applyFiltersToProfiles(profiles);
+  const filteredDetails = applyFiltersToDetails(details);
+
+  const gradYearData = groupByGraduationYear(filteredProfiles);
+  const degreeData = groupByDegree(filteredProfiles);
+  const employmentData = employmentTrends(filteredDetails);
+  const jobTitleData = topJobTitles(filteredDetails);
+  const employerData = topEmployers(filteredDetails);
+  const industryData = groupByIndustrySector(filteredProfiles);
+  const geoData = groupByGeography(filteredProfiles);
+  const skillGapData = skillsGapRadar(filteredDetails);
 
   return (
     <PageContainer title="Graphs & Charts">
       <Stack spacing={2}>
         {loading && <Typography>Loading charts...</Typography>}
         {error && <Alert severity="error">{error}</Alert>}
+
+        <FilterControls profiles={profiles} />
 
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 6 }}>

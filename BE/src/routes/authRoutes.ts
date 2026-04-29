@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { AuthController } from '../controllers/AuthController.js';
+import { csrfProtection } from '../middleware/csrf.js';
 
 const router = Router();
 
@@ -184,7 +185,7 @@ router.post('/login', AuthController.login);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/logout', AuthController.logout);
+router.post('/logout', csrfProtection, AuthController.logout);
 
 /**
  * @swagger
@@ -324,7 +325,7 @@ router.get('/verify', AuthController.verifyToken);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/request-password-reset', AuthController.requestPasswordReset);
+router.post('/request-password-reset', csrfProtection, AuthController.requestPasswordReset);
 
 /**
  * @swagger
@@ -382,7 +383,7 @@ router.post('/request-password-reset', AuthController.requestPasswordReset);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/reset-password', AuthController.resetPassword);
+router.post('/reset-password', csrfProtection, AuthController.resetPassword);
 
 /**
  * @swagger
@@ -442,7 +443,7 @@ router.post('/reset-password', AuthController.resetPassword);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/verify-email', AuthController.verifyEmail);
+router.post('/verify-email', csrfProtection, AuthController.verifyEmail);
 
 /**
  * @swagger
@@ -497,6 +498,6 @@ router.post('/verify-email', AuthController.verifyEmail);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/resend-verification', AuthController.resendVerification);
+router.post('/resend-verification', csrfProtection, AuthController.resendVerification);
 
 export default router;

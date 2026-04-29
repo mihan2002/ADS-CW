@@ -4,6 +4,7 @@ import { db } from "../db/index.js";
 import { usersTable } from "../db/schema.js";
 import type { CreateUserDto, UpdateUserDto } from "../dtos/user.dto.js";
 import { AuthService } from "./AuthService.js";
+import { sanitizeInput } from "../utils/sanitize.js";
 
 export class UserService {
   static async getAll() {
@@ -32,7 +33,7 @@ export class UserService {
     const created = await db
       .insert(usersTable)
       .values({
-        name: dto.name,
+        name: sanitizeInput(dto.name) || dto.name, // Sanitize name for XSS protection
         age: dto.age,
         email: dto.email,
         password_hash: await bcrypt.hash(dto.password, 10),

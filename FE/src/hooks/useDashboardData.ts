@@ -1,6 +1,7 @@
 import * as React from "react";
 import { getAlumniList, getAlumniProfile, getBiddingHistory, getTomorrowSlot } from "../services/api/alumni";
 import type { AlumniFullProfile, AlumniProfile, BidRecord, SlotStatus } from "../types/api";
+import { getErrorMessage } from "../utils/errorHandler";
 
 export function useDashboardData() {
   const [profiles, setProfiles] = React.useState<AlumniProfile[]>([]);
@@ -38,7 +39,7 @@ export function useDashboardData() {
         setSlotStatus(tomorrowSlot);
       } catch (err) {
         if (isActive) {
-          setError(err instanceof Error ? err.message : "Failed to load dashboard data");
+          setError(getErrorMessage(err));
         }
       } finally {
         if (isActive) {

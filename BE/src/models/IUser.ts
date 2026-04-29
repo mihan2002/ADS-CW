@@ -1,7 +1,7 @@
 // User Model
 export interface IUser {
   name: string;
-  age: number;
+  age?: number | null;
   email: string;
   role: string;
   is_email_verified: boolean;

@@ -5,7 +5,7 @@ const RoleEnum = z.enum(["user", "admin", "moderator"]);
 // ─── Create User ──────────────────────────────────────────────────────────────
 export const CreateUserDto = z.object({
   name: z.string().min(1, "Name is required"),
-  age: z.number().int("Age must be an integer").positive("Age must be a positive integer"),
+  age: z.number().int("Age must be an integer").positive("Age must be a positive integer").optional(),
   email: z
     .email("Invalid email address")
     .refine((email) => {

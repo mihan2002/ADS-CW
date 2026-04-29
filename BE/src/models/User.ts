@@ -5,7 +5,7 @@ import type { IUser } from "./IUser";
 export class User implements IUser {
 
   name: string;
-  age: number;
+  age?: number | null;
   email: string;
   role: string;
   is_email_verified: boolean;
@@ -17,7 +17,7 @@ export class User implements IUser {
   constructor(
    
     name: string,
-    age: number,
+    age: number | null | undefined,
     email: string,
     role: string,
     is_email_verified: boolean,

@@ -3,6 +3,7 @@ import { SignInPage } from "@toolpad/core/SignInPage";
 import { Alert, Link, LinearProgress, Stack } from "@mui/material";
 import { Navigate, useNavigate, useSearchParams } from "react-router";
 import { useAuth } from "../context/AuthContext";
+import { validateLoginForm } from "../utils/validation";
 
 export default function SignIn() {
   const { user, loading, signIn, devSignIn } = useAuth();
@@ -27,8 +28,13 @@ export default function SignIn() {
           try {
             const email = String(formData?.get("email") || "");
             const password = String(formData?.get("password") || "");
-            if (!email || !password) {
-              return { error: "Email and password are required" };
+
+            // Frontend validation
+            const validation = validateLoginForm({ email, password });
+            if (!validation.valid) {
+              const errorMessage = validation.errors.map((e) => e.message).join(", ");
+              setAuthError(errorMessage);
+              return { error: errorMessage };
             }
 
             await signIn(email, password);

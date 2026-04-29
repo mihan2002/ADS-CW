@@ -18,6 +18,7 @@ import {
 } from "@mui/material";
 import { getAlumniList, getAlumniProfile } from "../services/api/alumni";
 import type { AlumniFullProfile, AlumniProfile } from "../types/api";
+import { getErrorMessage } from "../utils/errorHandler";
 
 export default function EmployeesCrudPage() {
   const [alumni, setAlumni] = React.useState<AlumniProfile[]>([]);
@@ -50,7 +51,7 @@ export default function EmployeesCrudPage() {
         const data = await getAlumniList();
         setAlumni(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch alumni");
+        setError(getErrorMessage(err));
       } finally {
         setLoading(false);
       }

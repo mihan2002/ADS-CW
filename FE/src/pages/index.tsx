@@ -22,6 +22,8 @@ import {
   YAxis,
 } from "recharts";
 import { useDashboardData } from "../hooks/useDashboardData";
+import { useFilters } from "../context/FilterContext";
+import { FilterControls } from "../components/FilterControls";
 import {
   biddingActivityChartData,
   certificationDistribution,
@@ -54,23 +56,28 @@ function MetricCard({ label, value }: { label: string; value: number }) {
 
 export default function HomePage() {
   const { profiles, details, allBids, slotStatus, loading, error } = useDashboardData();
+  const { applyFiltersToProfiles, applyFiltersToDetails } = useFilters();
 
-  const degreesCount = details.reduce((acc, item) => acc + item.degrees.length, 0);
-  const certificationsCount = details.reduce((acc, item) => acc + item.certifications.length, 0);
-  const employmentRecordsCount = details.reduce((acc, item) => acc + item.employmentHistory.length, 0);
+  // Apply filters to data
+  const filteredProfiles = applyFiltersToProfiles(profiles);
+  const filteredDetails = applyFiltersToDetails(details);
 
-  const gradYearData = groupByGraduationYear(profiles);
-  const degreeData = groupByDegree(profiles);
-  const certDistribution = certificationDistribution(details);
-  const employmentData = employmentTrends(details);
-  const topSkillsData = topCertificationSkills(details);
+  const degreesCount = filteredDetails.reduce((acc, item) => acc + item.degrees.length, 0);
+  const certificationsCount = filteredDetails.reduce((acc, item) => acc + item.certifications.length, 0);
+  const employmentRecordsCount = filteredDetails.reduce((acc, item) => acc + item.employmentHistory.length, 0);
+
+  const gradYearData = groupByGraduationYear(filteredProfiles);
+  const degreeData = groupByDegree(filteredProfiles);
+  const certDistribution = certificationDistribution(filteredDetails);
+  const employmentData = employmentTrends(filteredDetails);
+  const topSkillsData = topCertificationSkills(filteredDetails);
   const biddingData = biddingActivityChartData(allBids);
-  const jobTitleData = topJobTitles(details);
-  const employerData = topEmployers(details);
-  const industryData = groupByIndustrySector(profiles);
-  const geoData = groupByGeography(profiles);
-  const skillGapData = skillsGapRadar(details);
-  const appearanceData = profiles.map((profile) => ({
+  const jobTitleData = topJobTitles(filteredDetails);
+  const employerData = topEmployers(filteredDetails);
+  const industryData = groupByIndustrySector(filteredProfiles);
+  const geoData = groupByGeography(filteredProfiles);
+  const skillGapData = skillsGapRadar(filteredDetails);
+  const appearanceData = filteredProfiles.map((profile) => ({
     name: `${profile.first_name} ${profile.last_name}`.trim(),
     value: profile.appearance_count || 0,
   }));
@@ -108,9 +115,11 @@ export default function HomePage() {
         {loading && <Typography>Loading dashboard insights...</Typography>}
         {error && <Alert severity="error">{error}</Alert>}
 
+        <FilterControls profiles={profiles} />
+
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 3 }}>
-            <MetricCard label="Total Alumni" value={profiles.length} />
+            <MetricCard label="Total Alumni" value={filteredProfiles.length} />
           </Grid>
           <Grid size={{ xs: 12, md: 3 }}>
             <MetricCard label="Certifications Count" value={certificationsCount} />
@@ -126,7 +135,7 @@ export default function HomePage() {
         <Stack direction="row" spacing={1}>
           <Button
             variant="outlined"
-            onClick={() => exportToCsv("alumni_analytics.csv", profiles.map((item) => ({ ...item })))}
+            onClick={() => exportToCsv("alumni_analytics.csv", filteredProfiles.map((item) => ({ ...item })))}
           >
             Export Alumni CSV
           </Button>

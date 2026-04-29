@@ -21,6 +21,8 @@ import {
   updateBid,
 } from "../services/api/alumni";
 import type { BidRecord } from "../types/api";
+import { validateBidAmount } from "../utils/validation";
+import { getErrorMessage } from "../utils/errorHandler";
 
 export default function BiddingPage() {
   const { user } = useAuth();
@@ -29,6 +31,7 @@ export default function BiddingPage() {
   const [history, setHistory] = React.useState<BidRecord[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [validationError, setValidationError] = React.useState<string | null>(null);
   const [appearanceSummary, setAppearanceSummary] = React.useState("");
   const [limitSummary, setLimitSummary] = React.useState("");
 
@@ -47,7 +50,7 @@ export default function BiddingPage() {
       setAppearanceSummary(`Monthly wins: ${appearance.monthlyCount}, total wins: ${appearance.totalCount}`);
       setLimitSummary(`Current count: ${limit.currentCount}/${limit.limit}, remaining: ${limit.remainingSlots}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load bidding data");
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -59,35 +62,56 @@ export default function BiddingPage() {
 
   const parsedAmount = Number(amount);
 
+  const validateBid = (isUpdate: boolean = false): boolean => {
+    setValidationError(null);
+
+    const currentBidAmount = currentBid ? Number(currentBid.amount) : null;
+    const validationErr = validateBidAmount(parsedAmount, isUpdate ? currentBidAmount : null);
+
+    if (validationErr) {
+      setValidationError(validationErr.message);
+      return false;
+    }
+
+    return true;
+  };
+
   const submitBid = async () => {
-    if (!user || !parsedAmount || parsedAmount <= 0) return;
+    if (!user || !validateBid(false)) return;
+
     try {
+      setError(null);
       await placeBid(user.id, parsedAmount);
       setAmount("");
+      setValidationError(null);
       await loadBiddingData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to place bid");
+      setError(getErrorMessage(err));
     }
   };
 
   const submitUpdate = async () => {
-    if (!user || !currentBid || !parsedAmount || parsedAmount <= 0) return;
+    if (!user || !currentBid || !validateBid(true)) return;
+
     try {
+      setError(null);
       await updateBid(user.id, currentBid.id, parsedAmount);
       setAmount("");
+      setValidationError(null);
       await loadBiddingData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update bid");
+      setError(getErrorMessage(err));
     }
   };
 
   const submitCancel = async () => {
     if (!user || !currentBid) return;
     try {
+      setError(null);
       await cancelBid(user.id, currentBid.id);
       await loadBiddingData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to cancel bid");
+      setError(getErrorMessage(err));
     }
   };
 
@@ -115,7 +139,12 @@ export default function BiddingPage() {
                 label="Bid Amount"
                 type="number"
                 value={amount}
-                onChange={(event) => setAmount(event.target.value)}
+                onChange={(event) => {
+                  setAmount(event.target.value);
+                  setValidationError(null);
+                }}
+                error={Boolean(validationError)}
+                helperText={validationError || "Enter amount in LKR"}
               />
               <Button variant="contained" onClick={submitBid}>
                 Place Bid

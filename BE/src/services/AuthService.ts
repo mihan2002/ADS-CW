@@ -62,6 +62,13 @@ export class AuthService {
       throw err;
     }
 
+    // SECURITY: Enforce email verification before allowing login
+    if (user.is_email_verified === 0) {
+      const err = new Error("Email not verified. Please verify your email before logging in.");
+      (err as any).statusCode = 403;
+      throw err;
+    }
+
     await db
       .update(usersTable)
       .set({ last_login_at: new Date() })
