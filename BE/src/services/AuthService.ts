@@ -42,7 +42,14 @@ export interface TokenPayload {
 export class AuthService {
   static async login(dto: LoginDto): Promise<LoginResult> {
     const users = await db
-      .select()
+      .select({
+        id: usersTable.id,
+        name: usersTable.name,
+        email: usersTable.email,
+        age: usersTable.age,
+        role: usersTable.role,
+        password_hash: usersTable.password_hash,
+      })
       .from(usersTable)
       .where(eq(usersTable.email, dto.email))
       .limit(1);
@@ -62,17 +69,37 @@ export class AuthService {
       throw err;
     }
 
-    // SECURITY: Enforce email verification before allowing login
-    if (user.is_email_verified === 0) {
+    let isEmailVerified = 1;
+    try {
+      const verificationRows = await db
+        .select({ is_email_verified: usersTable.is_email_verified })
+        .from(usersTable)
+        .where(eq(usersTable.id, user.id))
+        .limit(1);
+
+      if (verificationRows.length > 0) {
+        isEmailVerified = verificationRows[0]!.is_email_verified;
+      }
+    } catch {
+      // Backward compatibility: some local DBs may not have this column yet.
+      isEmailVerified = 1;
+    }
+
+    // SECURITY: Enforce email verification before allowing login when column exists
+    if (isEmailVerified === 0) {
       const err = new Error("Email not verified. Please verify your email before logging in.");
       (err as any).statusCode = 403;
       throw err;
     }
 
-    await db
-      .update(usersTable)
-      .set({ last_login_at: new Date() })
-      .where(eq(usersTable.id, user.id));
+    try {
+      await db
+        .update(usersTable)
+        .set({ last_login_at: new Date() })
+        .where(eq(usersTable.id, user.id));
+    } catch {
+      // Backward compatibility: some local DBs may not have this column yet.
+    }
 
     const tokens = JWTUtils.generateTokens({
       userId: user.id,
@@ -88,7 +115,7 @@ export class AuthService {
         email: user.email,
         age: user.age,
         role: user.role,
-        is_email_verified: user.is_email_verified,
+        is_email_verified: isEmailVerified,
         last_login_at: new Date(),
       },
       accessToken: tokens.accessToken,

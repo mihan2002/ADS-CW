@@ -9,8 +9,16 @@ export const CreateUserDto = z.object({
   email: z
     .email("Invalid email address")
     .refine((email) => {
+      // Check if all email domains are allowed
+      const allowAllDomains = process.env.ALLOW_ALL_EMAIL_DOMAINS === "true";
+      if (allowAllDomains) return true;
+      
+      // Restrict to university domains only
       const allowed = (process.env.UNIVERSITY_EMAIL_DOMAINS ?? "").split(",").map((d) => d.trim()).filter(Boolean);
-      if (allowed.length === 0) return true; // allow if not configured; enforced in production via env.example/docs
+      if (allowed.length === 0) {
+        console.warn("UNIVERSITY_EMAIL_DOMAINS not configured but ALLOW_ALL_EMAIL_DOMAINS is false. No emails will be accepted.");
+        return false;
+      }
       const domain = email.split("@")[1]?.toLowerCase() ?? "";
       return allowed.some((d) => domain === d.toLowerCase());
     }, "Email must be a university email address"),

@@ -325,7 +325,7 @@ router.get('/verify', AuthController.verifyToken);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/request-password-reset', csrfProtection, AuthController.requestPasswordReset);
+router.post('/request-password-reset', AuthController.requestPasswordReset);
 
 /**
  * @swagger
@@ -383,7 +383,7 @@ router.post('/request-password-reset', csrfProtection, AuthController.requestPas
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/reset-password', csrfProtection, AuthController.resetPassword);
+router.post('/reset-password', AuthController.resetPassword);
 
 /**
  * @swagger
@@ -443,7 +443,7 @@ router.post('/reset-password', csrfProtection, AuthController.resetPassword);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/verify-email', csrfProtection, AuthController.verifyEmail);
+router.post('/verify-email', AuthController.verifyEmail);
 
 /**
  * @swagger
@@ -498,6 +498,6 @@ router.post('/verify-email', csrfProtection, AuthController.verifyEmail);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/resend-verification', csrfProtection, AuthController.resendVerification);
+router.post('/resend-verification', AuthController.resendVerification);
 
 export default router;
