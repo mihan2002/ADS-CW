@@ -41,6 +41,16 @@ app.use(cookieParser());
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 
+// Debug logging middleware
+app.use((req, res, next) => {
+  console.log('\n[Request Debug] -------------------');
+  console.log('[Request Debug] Method:', req.method);
+  console.log('[Request Debug] Path:', req.path);
+  console.log('[Request Debug] Headers:', JSON.stringify(req.headers, null, 2));
+  console.log('[Request Debug] -------------------\n');
+  next();
+});
+
 // Serve static files for uploaded images
 app.use('/uploads', express.static('uploads'));
 
@@ -49,6 +59,14 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   swaggerOptions: {
     persistAuthorization: true,
     displayOperationId: false,
+    requestInterceptor: (req: any) => {
+      console.log('[Swagger Debug] Outgoing request:', {
+        url: req.url,
+        method: req.method,
+        headers: req.headers
+      });
+      return req;
+    },
   },
   customCss: '.swagger-ui .topbar { display: none }',
 }));

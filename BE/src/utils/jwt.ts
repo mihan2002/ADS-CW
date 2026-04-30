@@ -54,9 +54,23 @@ export class JWTUtils {
    * Verify access token
    */
   static verifyAccessToken(token: string): JWTPayload {
+    console.log('[JWT Debug] Verifying access token...');
     try {
-      return jwt.verify(token, JWT_SECRET) as JWTPayload;
+      const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+      console.log('[JWT Debug] Token decoded successfully:', {
+        userId: decoded.userId,
+        email: decoded.email,
+        name: decoded.name,
+        role: decoded.role
+      });
+      return decoded;
     } catch (error) {
+      console.error('[JWT Debug] Verification error:', (error as Error).message);
+      if (error instanceof jwt.TokenExpiredError) {
+        console.error('[JWT Debug] Token has expired at:', error.expiredAt);
+      } else if (error instanceof jwt.JsonWebTokenError) {
+        console.error('[JWT Debug] JWT Error:', error.message);
+      }
       throw new Error('Invalid or expired token');
     }
   }

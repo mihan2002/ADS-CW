@@ -107,11 +107,6 @@ const router = Router();
  *         message:
  *           type: string
  *           example: Invalid email or password
- *   securitySchemes:
- *     BearerAuth:
- *       type: http
- *       scheme: bearer
- *       bearerFormat: JWT
  */
 
 /**
@@ -163,7 +158,7 @@ router.post('/login', AuthController.login);
  *     description: Logout user (client should remove tokens)
  *     tags: [Authentication]
  *     security:
- *       - BearerAuth: []
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Logout successful
@@ -236,7 +231,7 @@ router.post('/refresh', AuthController.refreshToken);
  *     description: Check if the provided access token is valid
  *     tags: [Authentication]
  *     security:
- *       - BearerAuth: []
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Token is valid

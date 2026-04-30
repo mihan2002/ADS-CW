@@ -16,11 +16,8 @@ const options = {
       {
         url: 'http://localhost:3000',
         description: 'Development server',
-      },
-      {
-        url: 'http://localhost:3001',
-        description: 'Development server (alternate)',
-      },
+      }
+    
     ],
     components: {
       securitySchemes: {
@@ -28,6 +25,7 @@ const options = {
           type: 'http',
           scheme: 'bearer',
           bearerFormat: 'JWT',
+          description: 'Enter your JWT token (without Bearer prefix)',
         },
       },
     },

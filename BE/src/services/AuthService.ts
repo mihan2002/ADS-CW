@@ -157,12 +157,21 @@ export class AuthService {
   }
 
   static verifyToken(token: string): TokenPayload {
+    console.log('[AuthService Debug] Attempting to verify token');
     try {
-      return JWTUtils.verifyAccessToken(token) as TokenPayload;
-    } catch {
-      const err = new Error("Invalid or expired token");
-      (err as any).statusCode = 401;
-      throw err;
+      const payload = JWTUtils.verifyAccessToken(token) as TokenPayload;
+      console.log('[AuthService Debug] Token verified successfully:', {
+        userId: payload.userId,
+        email: payload.email,
+        name: payload.name,
+        role: payload.role
+      });
+      return payload;
+    } catch (err) {
+      console.error('[AuthService Debug] Token verification failed:', (err as Error).message);
+      const error = new Error("Invalid or expired token");
+      (error as any).statusCode = 401;
+      throw error;
     }
   }
 

@@ -183,6 +183,8 @@ const router = Router();
  *   get:
  *     summary: Get all users
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Users retrieved successfully
@@ -214,6 +216,8 @@ router.get('/', UserController.getAll);
  *   get:
  *     summary: Get a user by ID
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -247,7 +251,7 @@ router.get('/', UserController.getAll);
  *             schema:
  *               $ref: '#/components/schemas/ApiResponseMessage'
  */
-router.get('/:id', requireAuth, requireSelfOrRole(["admin"]), UserController.getById);
+router.get('/:id', requireAuth, requireSelfOrRole(["admin", "user"]), UserController.getById);
 
 /**
  * @swagger
@@ -287,6 +291,8 @@ router.get('/:id', requireAuth, requireSelfOrRole(["admin"]), UserController.get
  *   put:
  *     summary: Update a user by ID
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -334,6 +340,8 @@ router.put('/:id', csrfProtection, UserController.update);
  *   delete:
  *     summary: Delete a user by ID
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
