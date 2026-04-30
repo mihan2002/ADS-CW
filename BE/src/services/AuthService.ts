@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import crypto from "crypto";
-import { eq, and } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { usersTable, passwordResetTokensTable, emailVerificationTokensTable } from "../db/schema.js";
 import { JWTUtils } from "../utils/jwt.js";
@@ -392,77 +392,101 @@ export class AuthService {
    * On success: marks used_at, sets is_email_verified = 1 on the user.
    */
   static async verifyEmail(dto: VerifyEmailDto): Promise<void> {
+    console.log("[DEBUG] AuthService.verifyEmail called with:", JSON.stringify(dto, null, 2));
+    
     // 1. Find the user
+    console.log("[DEBUG] Step 1: Looking up user by email:", dto.email);
     const users = await db
       .select()
       .from(usersTable)
       .where(eq(usersTable.email, dto.email))
       .limit(1);
+    console.log("[DEBUG] User query result: found", users.length, "user(s)");
 
     if (users.length === 0) {
+      console.error("[DEBUG] User not found for email:", dto.email);
       const err = new Error("Invalid email or token");
       (err as any).statusCode = 400;
       throw err;
     }
 
     const user = users[0]!;
+    console.log("[DEBUG] User found:", { id: user.id, email: user.email, is_email_verified: user.is_email_verified });
 
     // 2. Already verified?
+    console.log("[DEBUG] Step 2: Checking if email is already verified...");
     if (user.is_email_verified === 1) {
+      console.error("[DEBUG] Email is already verified");
       const err = new Error("Email is already verified");
       (err as any).statusCode = 409;
       throw err;
     }
+    console.log("[DEBUG] Email is not yet verified, proceeding...");
 
     // 3. Fetch all pending tokens for this user
+    console.log("[DEBUG] Step 3: Fetching pending verification tokens for user ID:", user.id);
     const tokens = await db
       .select()
       .from(emailVerificationTokensTable)
       .where(
         and(
           eq(emailVerificationTokensTable.user_id, user.id),
-          eq(emailVerificationTokensTable.used_at, null as any),
+          isNull(emailVerificationTokensTable.used_at),
         ),
       );
+    console.log("[DEBUG] Found", tokens.length, "pending token(s)");
 
     if (tokens.length === 0) {
+      console.error("[DEBUG] No pending verification token found");
       const err = new Error("No pending verification token found. Please request a new one.");
       (err as any).statusCode = 400;
       throw err;
     }
 
     // 4. Find a matching, non-expired token
+    console.log("[DEBUG] Step 4: Validating token...");
+    console.log("[DEBUG] Provided token:", dto.token);
     let validToken = null;
     for (const dbToken of tokens) {
+      console.log("[DEBUG] Comparing with stored token ID:", dbToken.id, "expires at:", dbToken.expires_at);
       const isMatch = await bcrypt.compare(dto.token, dbToken.token_hash);
+      console.log("[DEBUG] Token match result:", isMatch);
       if (isMatch) {
+        console.log("[DEBUG] Token matched! Checking expiration...");
         if (new Date() > new Date(dbToken.expires_at)) {
+          console.error("[DEBUG] Token has expired. Current time:", new Date(), "Expiry time:", dbToken.expires_at);
           const err = new Error("Verification token has expired. Please request a new one.");
           (err as any).statusCode = 400;
           throw err;
         }
+        console.log("[DEBUG] Token is valid and not expired");
         validToken = dbToken;
         break;
       }
     }
 
     if (!validToken) {
+      console.error("[DEBUG] No matching valid token found");
       const err = new Error("Invalid verification token");
       (err as any).statusCode = 400;
       throw err;
     }
 
     // 5. Mark token as used
+    console.log("[DEBUG] Step 5: Marking token as used...");
     await db
       .update(emailVerificationTokensTable)
       .set({ used_at: new Date() })
       .where(eq(emailVerificationTokensTable.id, validToken.id));
+    console.log("[DEBUG] Token marked as used");
 
     // 6. Mark user as verified
+    console.log("[DEBUG] Step 6: Marking user as verified...");
     await db
       .update(usersTable)
       .set({ is_email_verified: 1, updated_at: new Date() })
       .where(eq(usersTable.id, user.id));
+    console.log("[DEBUG] User marked as verified. Email verification complete!");
   }
 
   /**

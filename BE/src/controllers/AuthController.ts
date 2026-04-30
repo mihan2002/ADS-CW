@@ -116,16 +116,29 @@ export class AuthController {
    * Verify email with OTP token
    */
   static async verifyEmail(req: Request, res: Response): Promise<void> {
+    console.log("[DEBUG] verifyEmail controller called");
+    console.log("[DEBUG] Request body:", JSON.stringify(req.body, null, 2));
+    console.log("[DEBUG] Request headers:", JSON.stringify(req.headers, null, 2));
     try {
+      console.log("[DEBUG] Parsing DTO...");
       const dto = VerifyEmailDto.parse(req.body);
+      console.log("[DEBUG] DTO parsed successfully:", JSON.stringify(dto, null, 2));
+      
+      console.log("[DEBUG] Calling AuthService.verifyEmail...");
       await AuthService.verifyEmail(dto);
+      console.log("[DEBUG] AuthService.verifyEmail completed successfully");
+      
       res.status(200).json({ success: true, message: "Email verified successfully" });
+      console.log("[DEBUG] Response sent: 200 OK");
     } catch (error) {
+      console.error("[DEBUG] Error caught in verifyEmail controller:", error);
       if (error instanceof ZodError) {
+        console.error("[DEBUG] Zod validation error:", JSON.stringify(error.issues, null, 2));
         res.status(400).json({ success: false, message: "Validation error", errors: error.issues });
         return;
       }
       const status = (error as any).statusCode ?? 500;
+      console.error("[DEBUG] Sending error response with status:", status);
       res.status(status).json({ success: false, message: (error as Error).message });
     }
   }
