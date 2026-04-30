@@ -1,6 +1,8 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { clearTokens, getAccessToken, getRefreshToken, setTokens } from "../../utils/tokenStorage";
+import { getStoredCsrfToken, setCsrfToken, clearCsrfToken } from "../../utils/csrfToken";
 import { ForbiddenError } from "../../utils/errorHandler";
+import type { ApiResponse } from "../../types/api";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ;
 
@@ -9,6 +11,7 @@ type RetriableRequest = InternalAxiosRequestConfig & { _retry?: boolean };
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000,
+  withCredentials: true, // Important for CSRF cookies
 });
 
 let isRefreshing = false;
@@ -19,7 +22,7 @@ function flushQueue(newToken: string | null) {
   pendingQueue = [];
 }
 
-apiClient.interceptors.request.use((config) => {
+apiClient.interceptors.request.use(async (config) => {
   const accessToken = getAccessToken();
   const url = `${config.baseURL ?? ""}${config.url ?? ""}`;
   const method = String(config.method || "get").toUpperCase();
@@ -32,6 +35,27 @@ apiClient.interceptors.request.use((config) => {
     // Ensure Authorization is always attached when token exists
     (config.headers as any).Authorization = `Bearer ${accessToken}`;
   }
+
+  // Add CSRF token for mutation requests
+  if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+    let csrfToken = getStoredCsrfToken();
+    
+    // If no token, fetch it first (but avoid infinite loop on the csrf endpoint itself)
+    if (!csrfToken && !url.includes("/csrf")) {
+      try {
+        csrfToken = await fetchCsrfToken();
+      } catch (err) {
+        console.error("[api] Failed to fetch CSRF token:", err);
+      }
+    }
+    
+    if (csrfToken) {
+      config.headers = config.headers ?? {};
+      (config.headers as any)["X-CSRF-Token"] = csrfToken;
+      console.debug("[api] Added CSRF token to request");
+    }
+  }
+
   return config;
 });
 
@@ -93,3 +117,39 @@ apiClient.interceptors.response.use(
     }
   },
 );
+
+// Fetch CSRF token from backend
+async function fetchCsrfToken(): Promise<string | null> {
+  try {
+    // Use a separate axios instance to avoid interceptor recursion
+    const response = await axios.get<ApiResponse<{ csrfToken: string }>>(
+      `${API_BASE_URL}/api/api-keys/csrf`,
+      {
+        withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${getAccessToken()}`,
+        },
+      }
+    );
+    const token = response.data.data.csrfToken;
+    setCsrfToken(token);
+    console.debug("[api] CSRF token fetched and stored");
+    return token;
+  } catch (err) {
+    console.error("[api] Failed to fetch CSRF token:", err);
+    return null;
+  }
+}
+
+// Export function to manually fetch CSRF token if needed
+export async function ensureCsrfToken(): Promise<string | null> {
+  const existing = getStoredCsrfToken();
+  if (existing) return existing;
+  return fetchCsrfToken();
+}
+
+// Clear CSRF token on logout
+export function clearAuthData(): void {
+  clearTokens();
+  clearCsrfToken();
+}

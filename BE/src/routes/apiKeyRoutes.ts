@@ -5,6 +5,43 @@ import { csrfProtection } from "../middleware/csrf.js";
 
 const router = Router();
 
+/**
+ * @swagger
+ * /api/api-keys/csrf:
+ *   get:
+ *     summary: Get CSRF token
+ *     description: Retrieve a CSRF token required for mutation operations (accessible to all authenticated users)
+ *     tags: [API Keys]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: CSRF token issued successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     csrfToken:
+ *                       type: string
+ *                 message:
+ *                   type: string
+ *                   example: CSRF token issued
+ *       401:
+ *         description: Unauthorized
+ */
+router.get("/csrf", requireAuth, csrfProtection, (req, res) => {
+  const token = (req as any).csrfToken?.();
+  res.status(200).json({ success: true, data: { csrfToken: token }, message: "CSRF token issued" });
+});
+
+// All routes below require admin role
 router.use(requireAuth, requireRole(["admin"]));
 
 /**
@@ -54,44 +91,6 @@ router.use(requireAuth, requireRole(["admin"]));
  *         description: Internal server error
  */
 router.get("/", ApiKeyController.list);
-
-/**
- * @swagger
- * /api/api-keys/csrf:
- *   get:
- *     summary: Get CSRF token for API key operations
- *     description: Retrieve a CSRF token required for creating or revoking API keys (Admin only)
- *     tags: [API Keys]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: CSRF token issued successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: object
- *                   properties:
- *                     csrfToken:
- *                       type: string
- *                 message:
- *                   type: string
- *                   example: CSRF token issued
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden - Admin role required
- */
-router.get("/csrf", csrfProtection, (req, res) => {
-  const token = (req as any).csrfToken?.();
-  res.status(200).json({ success: true, data: { csrfToken: token }, message: "CSRF token issued" });
-});
 
 /**
  * @swagger

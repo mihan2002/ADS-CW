@@ -152,3 +152,31 @@ export async function getTomorrowSlot() {
   const response = await apiClient.get<ApiResponse<SlotStatus>>("/api/alumni/slots/tomorrow");
   return response.data.data;
 }
+
+export interface CreateOrUpdateProfileData {
+  first_name: string;
+  last_name: string;
+  bio?: string;
+  programme?: string;
+  graduation_year?: number;
+  graduation_date?: string;
+  degree?: string;
+  industry_sector?: string;
+  geography?: string;
+  current_position?: string;
+  linkedin_url?: string;
+}
+
+export async function createOrUpdateProfile(userId: number, data: CreateOrUpdateProfileData) {
+  if (isDevBypassEnabled()) {
+    await wait();
+    // Update dev mock data
+    console.log("[Dev] Create/Update Profile:", data);
+    return data;
+  }
+  const response = await apiClient.post<ApiResponse<AlumniProfile>>(
+    `/api/alumni/${userId}/profile`,
+    data
+  );
+  return response.data.data;
+}

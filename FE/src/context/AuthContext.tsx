@@ -1,6 +1,7 @@
 import * as React from "react";
 import { clearTokens, getAccessToken, setTokens } from "../utils/tokenStorage";
 import { login as loginApi, verifyAccessToken } from "../services/api/auth";
+import { clearAuthData } from "../services/api/client";
 import { isDevBypassEnabled, setDevBypassEnabled } from "../utils/devMode";
 
 export interface AuthSessionUser {
@@ -22,10 +23,10 @@ interface AuthContextType {
 const AuthContext = React.createContext<AuthContextType>({
   user: null,
   loading: true,
-  signIn: async () => {},
-  signOut: () => {},
-  setUser: () => {},
-  devSignIn: () => {},
+  signIn: async () => { },
+  signOut: () => { },
+  setUser: () => { },
+  devSignIn: () => { },
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -59,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: verified.role,
       });
     } catch {
-      clearTokens();
+      clearAuthData();
       setUser(null);
     } finally {
       setLoading(false);
@@ -84,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = React.useCallback(() => {
     setDevBypassEnabled(false);
-    clearTokens();
+    clearAuthData();
     setUser(null);
   }, []);
 

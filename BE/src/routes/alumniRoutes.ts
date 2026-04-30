@@ -398,7 +398,7 @@ router.get("/:userId", requireSelfOrRole(["admin"]), AlumniController.getProfile
  *       500:
  *         description: Server error
  */
-router.post("/:userId/profile", csrfProtection, requireSelfOrRole(["admin"]), AlumniController.createOrUpdateProfile);
+router.post("/:userId/profile", csrfProtection, requireSelfOrRole(["admin","user"]), AlumniController.createOrUpdateProfile);
 
 /**
  * @swagger
@@ -437,7 +437,7 @@ router.post("/:userId/profile", csrfProtection, requireSelfOrRole(["admin"]), Al
 router.post(
 	"/:userId/profile-image",
   csrfProtection,
-  requireSelfOrRole(["admin"]),
+  requireSelfOrRole(["admin","user"]),
 	upload.single("profileImage"),
 	AlumniController.uploadProfileImage,
 );
